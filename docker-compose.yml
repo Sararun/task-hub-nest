@@ -9,12 +9,13 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:password@db:5432/task-hub-db
     depends_on:
       - db
     volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
+      - .:/var/www/app
+      - /var/www/app/node_modules
+    env_file:
+      - .env
   db:
     container_name: postgres_db
     image: postgres:alpine

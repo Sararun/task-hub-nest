@@ -1,30 +1,49 @@
-# Этап 1: Сборка приложения
+FROM node:20-alpine AS dev
+
+WORKDIR /var/www
+RUN apk add --no-cache libc6-compat
+ENV NODE_ENV dev
+
+RUN addgroup --system --gid 1001 app
+RUN adduser --system --uid 1001 app
+
+COPY --chown=app:app . .
+RUN npm install --prefer-frozen-lockfile
+
+USER app
+
 FROM node:20-alpine as build
 
-# Создание директории приложения
-WORKDIR /usr/src/app
+WORKDIR /var/www
+RUN apk add --no-cache libc6-compat
+ENV NODE_ENV production
 
-# Копирование файлов проекта и установка зависимостей
-COPY package*.json ./
-RUN npm install
-RUN npm install -g @nestjs/cli
+RUN addgroup --system --gid 1001 app
+RUN adduser --system --uid 1001 app
 
-# Копирование остальных файлов проекта
-COPY . .
+COPY --chown=app:app --from=dev /var/www/node_modules ./node_modules
 
-# Сборка приложения
+COPY --chown=app:app . .
+
 RUN npm run build
 
-# Этап 2: Создание финального образа
-FROM node:20-alpine
+RUN npm ci --only=production && npm cache clean --force
+USER app
 
-WORKDIR /usr/src/app
+FROM node:20-alpine as prod
 
-# Копирование собранного приложения из предыдущего этапа
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=build /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/package.json ./package.json
+WORKDIR /var/www
+RUN apk add --no-cache libc6-compat
 
-# Открытие порта 3000 и запуск приложения
-EXPOSE 3000
-CMD ["npm", "run", "start:dev"]
+ENV NODE_ENV production
+
+RUN addgroup --system --gid 1001 app
+RUN adduser --system --uid 1001 app
+
+COPY --chown=app:app --from=build /var/www/dist dist
+COPY --chown=app:app --from=build /var/www/node_modules node_modules
+COPY --chown=app:app --from=build /var/www/package.json package.json
+
+USER app
+
+CMD ["npm", "run", "start:prod"]
