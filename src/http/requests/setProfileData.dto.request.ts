@@ -1,14 +1,16 @@
-import { IsEmail, IsOptional, IsString, Validate } from 'class-validator';
-import { EmailExistsValidator } from '../../validators/emailExists.validator';
+import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class SetProfileDataDtoRequest {
-
-  @IsEmail()
-  @Validate(EmailExistsValidator)
-  @IsOptional()
-  email: string;
-
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
+  @MaxLength(255)
+  @ApiProperty({
+    description: 'The name of the user.',
+    example: 'John Doe',
+    maxLength: 255,
+    required: true,
+    type: String,
+  })
   name: string;
 }
