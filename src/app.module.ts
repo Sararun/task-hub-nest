@@ -6,11 +6,11 @@ import { PrismaService } from './services/prisma.service';
 import { AuthController } from './http/controllers/auth.controller';
 import { AuthModule } from './modules/auth.module';
 import { AuthService } from './services/auth/auth.service';
-import { UserModule } from './modules/user.module';
 import { ProfileController } from './http/controllers/profile.controller';
+import { ProfileModule } from './modules/profile.module';
 
 @Module({
-  imports: [AuthModule, UserModule],
+  imports: [AuthModule, ProfileModule],
   controllers: [AppController, AuthController, ProfileController],
   providers: [AppService, UserService, PrismaService, AuthService],
 })

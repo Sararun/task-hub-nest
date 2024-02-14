@@ -18,9 +18,8 @@ import { User } from '@prisma/client';
 @ApiTags('profile')
 @UseGuards(AuthGuard)
 export class ProfileController {
-  @Patch('set-profile-data')
-  setProfileData(@Body() setProfileDto: SetProfileDataDtoRequest) {
-    console.log(typeof setProfileDto);
+  constructor(private prisma: PrismaService) {}
+
   @Patch('set-name')
   @ApiParam({
     name: 'name',
@@ -46,5 +45,26 @@ export class ProfileController {
     description: 'Validation error',
   })
   @ApiBearerAuth('access-token')
+  @HttpCode(HttpStatus.OK)
+  async setProfileData(
+    @Body() setProfileDto: SetProfileDataDtoRequest,
+    @Req() request: any,
+  ): Promise<{ status: HttpStatus }> {
+    try {
+      const updatedUser: User = await this.prisma.user.update({
+        where: {
+          id: request.user.sub,
+        },
+        data: {
+          name: setProfileDto.name,
+        },
+      });
+      if (!!updatedUser) {
+        return { status: HttpStatus.OK };
+      }
+      return { status: HttpStatus.NOT_FOUND };
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
   }
 }
