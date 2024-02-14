@@ -9,7 +9,7 @@ RUN adduser --system --uid 1001 app
 
 COPY --chown=app:app . .
 RUN npm install --prefer-frozen-lockfile
-
+RUN npx prisma generate
 USER app
 
 FROM node:20-alpine as build
