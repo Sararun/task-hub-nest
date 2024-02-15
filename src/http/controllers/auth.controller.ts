@@ -26,15 +26,28 @@ import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
   example: 'password',
 })
 @ApiResponse({
-  status: HttpStatus.OK,
-  description: 'Access token was generated.',
-})
-@ApiResponse({
   status: HttpStatus.BAD_REQUEST,
+  schema: {
+    example: {
+      message: [
+        'email must be an email',
+        'password must be a string',
+        'password should not be empty',
+      ],
+      error: 'Bad Request',
+      statusCode: 400,
+    },
+  },
   description: 'Validation error',
 })
 @ApiResponse({
   status: HttpStatus.UNAUTHORIZED,
+  schema: {
+    example: {
+      message: 'Unauthorized',
+      statusCode: 401,
+    },
+  },
   description: 'User not authorized',
 })
 export class AuthController {
@@ -45,6 +58,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
     status: HttpStatus.OK,
+    schema: {
+      example: {
+        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+    },
     description: 'Access token was generated.',
   })
   async signIn(
@@ -58,6 +76,11 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Register ok and access token was generated.',
+    schema: {
+      example: {
+        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+      },
+    },
   })
   @ApiParam({
     name: 'name',
