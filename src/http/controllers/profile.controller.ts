@@ -9,14 +9,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SetProfileDataDtoRequest } from '../requests/setProfileData.dto.request';
-import { AuthGuard } from '../../auth.guard';
+import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../services/prisma.service';
-import { ApiBearerAuth, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 
 @Controller('profile')
 @ApiTags('profile')
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard('jwt'))
 export class ProfileController {
   constructor(private prisma: PrismaService) {}
 
@@ -76,7 +76,6 @@ export class ProfileController {
     },
     description: 'Validation error',
   })
-  @ApiBearerAuth('access-token')
   @HttpCode(HttpStatus.OK)
   async setProfileData(
     @Body() setProfileDto: SetProfileDataDtoRequest,
@@ -85,7 +84,7 @@ export class ProfileController {
     try {
       const updatedUser: User = await this.prisma.user.update({
         where: {
-          id: request.user.sub,
+          email: request.user.email,
         },
         data: {
           name: setProfileDto.name,

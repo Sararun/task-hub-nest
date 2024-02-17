@@ -4,12 +4,14 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Res,
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from '../../services/auth/auth.service';
 import { SigInDtoRequest } from '../requests/sigIn.dto.request';
 import { SigUpDtoRequest } from '../requests/signUp.dto.request';
 import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -60,15 +62,22 @@ export class AuthController {
     status: HttpStatus.OK,
     schema: {
       example: {
-        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        statusCode: HttpStatus.OK,
       },
     },
     description: 'Access token was generated.',
   })
   async signIn(
     @Body() signInDto: SigInDtoRequest,
-  ): Promise<{ access_token: string }> {
-    return this.authService.signIn(signInDto.email, signInDto.password);
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ statusCode: HttpStatus.OK }> {
+    const { access_token } = await this.authService.signIn(
+      signInDto.email,
+      signInDto.password,
+    );
+    await this.authService.setJwtToken(res, access_token);
+
+    return { statusCode: HttpStatus.OK };
   }
 
   @Post('signup')
@@ -78,7 +87,7 @@ export class AuthController {
     description: 'Register ok and access token was generated.',
     schema: {
       example: {
-        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        statusCode: HttpStatus.OK,
       },
     },
   })
@@ -90,14 +99,21 @@ export class AuthController {
   })
   async signUp(
     @Body() signUpDto: SigUpDtoRequest,
-  ): Promise<{ access_token: string }> {
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ statusCode: HttpStatus.OK }> {
     const signUpResult: boolean = await this.authService.signUp(
       signUpDto.name,
       signUpDto.email,
       signUpDto.password,
     );
     if (signUpResult) {
-      return await this.authService.signIn(signUpDto.email, signUpDto.password);
+      const { access_token } = await this.authService.signIn(
+        signUpDto.email,
+        signUpDto.password,
+      );
+      await this.authService.setJwtToken(res, access_token);
+
+      return { statusCode: HttpStatus.OK };
     }
     throw UnauthorizedException;
   }
