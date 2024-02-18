@@ -46,7 +46,6 @@ export class AuthService {
   }
 
   async setJwtToken(res: Response, access_token: string) {
-    console.log(access_token);
     res.cookie('jwt', access_token, {
       httpOnly: true,
       path: '/',
