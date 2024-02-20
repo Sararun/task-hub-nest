@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
@@ -20,7 +21,6 @@ import { User } from '@prisma/client';
 export class ProfileController {
   constructor(private prisma: PrismaService) {}
 
-  @Patch('set-name')
   @ApiParam({
     name: 'name',
     description: 'The name of user',
@@ -76,6 +76,7 @@ export class ProfileController {
     },
     description: 'Validation error',
   })
+  @Patch('set-name')
   @HttpCode(HttpStatus.OK)
   async setProfileData(
     @Body() setProfileDto: SetProfileDataDtoRequest,
@@ -97,5 +98,35 @@ export class ProfileController {
     } catch (error) {
       throw new InternalServerErrorException();
     }
+  }
+
+  @Get('get')
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        email: 'email@mail.com',
+        name: 'John Doe',
+        statusCode: HttpStatus.OK,
+      },
+    },
+    description: 'Profile',
+  })
+  async get(@Req() request: any): Promise<{
+    statusCode: HttpStatus;
+    email: string | null | undefined;
+    name: string | null | undefined;
+  }> {
+    const user: User | null = await this.prisma.user.findUnique({
+      where: {
+        email: request.user.email,
+      },
+    });
+    return {
+      statusCode: HttpStatus.OK,
+      email: user?.email,
+      name: user?.name,
+    };
   }
 }
