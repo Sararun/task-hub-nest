@@ -1,7 +1,7 @@
 -- CreateTable
 CREATE TABLE "Task" (
     "id" SERIAL NOT NULL,
-    "images" JSONB NOT NULL,
+    "images" JSONB,
     "name" VARCHAR(255) NOT NULL,
     "description" TEXT,
     "deadline" TIMESTAMP(3),
