@@ -16,4 +16,15 @@ model User {
   email      String   @unique @db.VarChar(255)
   password   String   @db.VarChar(30)
   timestamps DateTime @db.Timestamp()
+  Task       Task[]
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  images      Json      @db.JsonB
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  deadline    DateTime?
+  owner_id    Int
+  owner       User      @relation(fields: [owner_id], references: [id])
 }
