@@ -2,35 +2,23 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpStatus,
   InternalServerErrorException,
   Param,
   ParseIntPipe,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from '../../services/prisma.service';
-import { AddColumnDtoRequest } from '../requests/addColumn.dto.request';
-import { UpdateColumnDtoRequest } from '../requests/updateColumn.dto.request';
-import { Column } from '@prisma/client';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AddColumnDtoRequest } from '../requests/addColumn.dto.request';
+import { Board, Column } from '@prisma/client';
+import { UpdateColumnDtoRequest } from '../requests/updateColumn.dto.request';
 
-@Controller('columns')
-@ApiTags('columns')
-@UseGuards(AuthGuard('jwt'))
-@ApiResponse({
-  status: HttpStatus.UNAUTHORIZED,
-  schema: {
-    example: {
-      message: 'Unauthorized',
-      statusCode: HttpStatus.UNAUTHORIZED,
-    },
-  },
-  description: 'User not authorized',
-})
-export class ColumnController {
+@Controller('boards/:boardId/columns/')
+@ApiTags('boards')
+export class BoardColumnController {
   constructor(private readonly prisma: PrismaService) {}
 
   @ApiResponse({
@@ -41,7 +29,6 @@ export class ColumnController {
         statusCode: HttpStatus.CREATED,
       },
     },
-    description: 'Internal server error.',
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -54,12 +41,29 @@ export class ColumnController {
     },
   })
   @Post()
-  async create(@Body() addColumnDto: AddColumnDtoRequest): Promise<{
-    statusCode: HttpStatus.CREATED;
-    message: 'Column was been successfully created';
+  async createColumn(
+    @Param('boardId', ParseIntPipe) boardId: number,
+    @Body() createColumnDto: AddColumnDtoRequest,
+  ): Promise<{
+    statusCode: HttpStatus;
+    message: string;
   }> {
+    const board: Board | null = await this.prisma.board.findUnique({
+      where: {
+        id: boardId,
+      },
+    });
+    if (board == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'The board you wanted to add a column to does not exist',
+      };
+    }
     const column: { _max: { column_number: number | null } } =
       await this.prisma.column.aggregate({
+        where: {
+          board_id: boardId,
+        },
         _max: {
           column_number: true,
         },
@@ -74,8 +78,9 @@ export class ColumnController {
 
     await this.prisma.column.create({
       data: {
-        name: addColumnDto.name,
+        name: createColumnDto.name,
         column_number: columnMaxNumber,
+        board_id: boardId,
       },
     });
 
@@ -124,14 +129,27 @@ export class ColumnController {
       },
     },
   })
-  @Patch(':id')
-  async update(
-    @Param('id', ParseIntPipe) columnId: number,
+  @Patch(':columnId')
+  async updateColumns(
+    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('columnId', ParseIntPipe) columnId: number,
     @Body() updateColumnDto: UpdateColumnDtoRequest,
   ): Promise<{
     statusCode: HttpStatus;
     message: string;
   }> {
+    const board: Board | null = await this.prisma.board.findUnique({
+      where: {
+        id: boardId,
+      },
+    });
+    if (board == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'The board you wanted to add a column to does not exist',
+      };
+    }
+
     const updatableColumn: Column | null = await this.prisma.column.findUnique({
       where: {
         id: columnId,
@@ -148,6 +166,7 @@ export class ColumnController {
     const existColumnNumber: Column | null = await this.prisma.column.findFirst(
       {
         where: {
+          board_id: boardId,
           column_number: updateColumnDto.columnNumber,
         },
       },
@@ -156,6 +175,7 @@ export class ColumnController {
     if (existColumnNumber != null) {
       const columnsToUpdate = await this.prisma.column.findMany({
         where: {
+          board_id: boardId,
           column_number: {
             gte: updateColumnDto.columnNumber,
           },
@@ -208,7 +228,6 @@ export class ColumnController {
     };
   }
 
-  @Delete(':id')
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     schema: {
@@ -226,7 +245,6 @@ export class ColumnController {
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       },
     },
-    description: 'Internal server error.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -236,15 +254,31 @@ export class ColumnController {
         statusCode: HttpStatus.OK,
       },
     },
-    description: 'The column was been deleted successfully.',
   })
-  async delete(@Param('id', ParseIntPipe) columnId: number): Promise<{
+  @Delete(':columnId')
+  async delete(
+    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('columnId', ParseIntPipe) columnId: number,
+  ): Promise<{
     statusCode: HttpStatus;
     message: string;
   }> {
+    const board: Board | null = await this.prisma.board.findUnique({
+      where: {
+        id: boardId,
+      },
+    });
+    if (board == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'The board you wanted to add a column to does not exist',
+      };
+    }
+
     const deletableColumn: Column | null = await this.prisma.column.findUnique({
       where: {
         id: columnId,
+        board_id: boardId,
       },
     });
 
@@ -257,6 +291,7 @@ export class ColumnController {
 
     const columnsToUpdate = await this.prisma.column.findMany({
       where: {
+        board_id: boardId,
         column_number: {
           gte: deletableColumn.column_number,
         },
@@ -266,7 +301,7 @@ export class ColumnController {
     if (columnsToUpdate.length > 0) {
       const updatePromises = columnsToUpdate.map((column: Column) => {
         return this.prisma.column.update({
-          where: { id: column.id },
+          where: { id: column.id, board_id: boardId },
           data: { column_number: column.column_number - 1 },
         });
       });
@@ -275,6 +310,7 @@ export class ColumnController {
         this.prisma.column.delete({
           where: {
             id: columnId,
+            board_id: boardId,
           },
         }),
       );
@@ -294,6 +330,7 @@ export class ColumnController {
     await this.prisma.column.delete({
       where: {
         id: columnId,
+        board_id: boardId,
       },
     });
 
@@ -301,5 +338,55 @@ export class ColumnController {
       statusCode: HttpStatus.OK,
       message: 'The column was been deleted successfully',
     };
+  }
+
+  @Get()
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    schema: {
+      example: {
+        message: "The board doesn't exist",
+        statusCode: HttpStatus.NOT_FOUND,
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        statusCode: HttpStatus.OK,
+        payload: [
+          {
+            id: 1,
+            name: 'first',
+            column_number: 0,
+            board_id: 1,
+          },
+          {
+            id: 2,
+            name: 'second',
+            column_number: 1,
+            board_id: 1,
+          },
+        ],
+      },
+    },
+  })
+  async get(@Param('boardId', ParseIntPipe) boardId: number) {
+    const board: Board | null = await this.prisma.board.findUnique({
+      where: {
+        id: boardId,
+      },
+    });
+    if (board == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "The board doesn't exist",
+      };
+    }
+    const payload: Column[] | null = await this.prisma.column.findMany({
+      where: { board_id: boardId },
+    });
+    return { statusCode: HttpStatus.OK, payload: payload };
   }
 }
