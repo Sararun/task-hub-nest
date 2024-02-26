@@ -10,7 +10,7 @@ import { ProfileController } from './http/controllers/profile.controller';
 import { ProfileModule } from './modules/profile.module';
 import { TaskController } from './http/controllers/task.controller';
 import { BoardController } from './http/controllers/board.controller';
-import { BoardColumnController } from './http/controllers/board-column.controller';
+import { ColumnController } from './http/controllers/column.controller';
 
 @Module({
   imports: [AuthModule, ProfileModule],
@@ -19,7 +19,7 @@ import { BoardColumnController } from './http/controllers/board-column.controlle
     AuthController,
     ProfileController,
     BoardController,
-    BoardColumnController,
+    ColumnController,
     TaskController,
   ],
   providers: [AppService, UserService, PrismaService, AuthService],

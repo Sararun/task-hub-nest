@@ -9,16 +9,18 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from '../../services/prisma.service';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AddColumnDtoRequest } from '../requests/addColumn.dto.request';
 import { Board, Column } from '@prisma/client';
 import { UpdateColumnDtoRequest } from '../requests/updateColumn.dto.request';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('boards/:boardId/columns/')
 @ApiTags('columns')
-export class BoardColumnController {
+export class ColumnController {
   constructor(private readonly prisma: PrismaService) {}
 
   @ApiResponse({
@@ -40,6 +42,7 @@ export class BoardColumnController {
       },
     },
   })
+  @UseGuards(AuthGuard('jwt'))
   @Post()
   async createColumn(
     @Param('boardId', ParseIntPipe) boardId: number,

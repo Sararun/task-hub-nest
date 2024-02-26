@@ -7,13 +7,16 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from '../../services/prisma.service';
 import { AddBoardDtoRequest } from '../requests/addBoard.dto.request';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('boards')
 @ApiTags('boards')
+@UseGuards(AuthGuard('jwt'))
 export class BoardController {
   constructor(private readonly prisma: PrismaService) {}
 
