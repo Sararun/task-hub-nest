@@ -16,6 +16,20 @@ model User {
   email      String   @unique @db.VarChar(255)
   password   String   @db.VarChar(30)
   timestamps DateTime @db.Timestamp()
+  Task       Task[]
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  images      Json?     @db.JsonB
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  deadline    DateTime?
+  owner_id    Int
+  owner       User      @relation(fields: [owner_id], references: [id])
+  column      Column    @relation(fields: [column_id], references: [id], onDelete: Cascade)
+  column_id   Int
+  timestamps  DateTime  @db.Timestamp()
 }
 
 model Column {
@@ -24,6 +38,7 @@ model Column {
   column_number Int
   board         Board  @relation(fields: [board_id], references: [id], onDelete: Cascade)
   board_id      Int
+  Task          Task[]
 
   @@unique([board_id, column_number])
 }
