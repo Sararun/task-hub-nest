@@ -224,7 +224,7 @@ export class TaskController {
 
   @Get()
   @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    status: HttpStatus.OK,
     schema: {
       example: {
         payload: [
@@ -249,7 +249,7 @@ export class TaskController {
             timestamps: '2024-02-26T14:41:47.734Z',
           },
         ],
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        statusCode: HttpStatus.OK,
       },
     },
     description: 'Internal server error.',
