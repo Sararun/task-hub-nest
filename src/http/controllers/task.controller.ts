@@ -15,7 +15,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../services/prisma.service';
 import { AddTaskDtoRequest } from '../requests/addTask.dto.request';
-import { Board, Column, Prisma, User } from '@prisma/client';
+import { Board, Column, Prisma, Task, User } from '@prisma/client';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller('boards/:boardId/columns/:columnId/tasks/')
@@ -252,7 +252,6 @@ export class TaskController {
         statusCode: HttpStatus.OK,
       },
     },
-    description: 'Internal server error.',
   })
   async get(
     @Param('boardId', ParseIntPipe) boardId: number,
