@@ -43,7 +43,7 @@ RUN adduser --system --uid 1001 app
 COPY --chown=app:app --from=build /var/www/dist dist
 COPY --chown=app:app --from=build /var/www/node_modules node_modules
 COPY --chown=app:app --from=build /var/www/package.json package.json
-
+COPY --chown=app:app --from=build /var/www/prisma prisma
 USER app
 
-CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:migrate:prod"]
