@@ -161,7 +161,7 @@ export class TaskController {
   async delete(
     @Param('boardId', ParseIntPipe) boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
-    @Param('taskId') taskId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
     @Req() request: any,
   ): Promise<{ message: string; statusCode: HttpStatus }> {
     const board: Board | null = await this.prisma.board.findUnique({
@@ -213,6 +213,7 @@ export class TaskController {
           statusCode: HttpStatus.NOT_FOUND,
         };
       }
+      console.log(error);
       throw InternalServerErrorException;
     }
 
