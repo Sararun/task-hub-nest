@@ -29,3 +29,19 @@ model Task {
   owner       User      @relation(fields: [owner_id], references: [id])
   timestamps  DateTime  @db.Timestamp()
 }
+
+model Column {
+  id            Int    @id @default(autoincrement())
+  name          String @db.VarChar(255)
+  column_number Int
+  board         Board  @relation(fields: [board_id], references: [id], onDelete: Cascade)
+  board_id      Int
+
+  @@unique([board_id, column_number])
+}
+
+model Board {
+  id      Int      @id @default(autoincrement())
+  name    String   @db.VarChar(255)
+  columns Column[]
+}
