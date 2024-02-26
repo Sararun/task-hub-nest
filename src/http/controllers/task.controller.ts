@@ -293,7 +293,7 @@ export class TaskController {
     if (!user) {
       throw UnauthorizedException;
     }
-    const payload = await this.prisma.task.findMany({
+    const payload: Task[] | [] = await this.prisma.task.findMany({
       where: {
         column_id: columnId,
       },
