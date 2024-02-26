@@ -7,10 +7,10 @@ import {
   Validate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { IsDateBeforeNowValidator } from '../../validators/isDateBeforeNow.validator';
+import { IsDateBeforeNowValidator } from '../../../validators/isDateBeforeNow.validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class AddTaskDtoRequest {
+export class CreateTaskDtoRequest {
   @IsOptional()
   @IsString()
   @ApiProperty({

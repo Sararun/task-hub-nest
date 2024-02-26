@@ -7,6 +7,7 @@ import {
   InternalServerErrorException,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Req,
   UnauthorizedException,
@@ -14,9 +15,10 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../services/prisma.service';
-import { AddTaskDtoRequest } from '../requests/addTask.dto.request';
+import { CreateTaskDtoRequest } from '../requests/tasks/createTask.dto.request';
 import { Board, Column, Prisma, Task, User } from '@prisma/client';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { UpdateTaskDtoRequest } from '../requests/tasks/updateTask.dto.request';
 
 @Controller('boards/:boardId/columns/:columnId/tasks/')
 @ApiTags('tasks')
@@ -72,7 +74,7 @@ export class TaskController {
   async add(
     @Param('boardId', ParseIntPipe) boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
-    @Body() addTaskDto: AddTaskDtoRequest,
+    @Body() addTaskDto: CreateTaskDtoRequest,
     @Req() request: any,
   ): Promise<{
     message: string;
@@ -257,7 +259,6 @@ export class TaskController {
   async get(
     @Param('boardId', ParseIntPipe) boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
-    @Param('taskId') taskId: number,
     @Req() request: any,
   ) {
     const board: Board | null = await this.prisma.board.findUnique({
@@ -300,5 +301,59 @@ export class TaskController {
     });
 
     return { statusCode: HttpStatus.OK, payload: payload };
+  }
+
+  @Patch(':taskId')
+  async update(
+    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('columnId', ParseIntPipe) columnId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Req() request: any,
+    @Body() updateTaskDto: UpdateTaskDtoRequest,
+  ) {
+    const board: Board | null = await this.prisma.board.findUnique({
+      where: {
+        id: boardId,
+      },
+    });
+    if (board == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "The board what you wanted doesn't exist",
+      };
+    }
+
+    const column: Column | null = await this.prisma.column.findUnique({
+      where: {
+        id: columnId,
+        board_id: boardId,
+      },
+    });
+
+    if (column == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "The column what you wanted doesn't exist",
+      };
+    }
+    const user: User | null = await this.prisma.user.findUnique({
+      where: {
+        email: request.user.email,
+      },
+    });
+    if (!user) {
+      throw UnauthorizedException;
+    }
+    await this.prisma.task.update({
+      where: {
+        id: taskId,
+      },
+      data: {
+        name: updateTaskDto.name,
+        description: updateTaskDto.description,
+        deadline: updateTaskDto.deadline,
+        column_id: columnId,
+      },
+    });
   }
 }
