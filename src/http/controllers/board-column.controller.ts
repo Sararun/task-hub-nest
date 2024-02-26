@@ -17,7 +17,7 @@ import { Board, Column } from '@prisma/client';
 import { UpdateColumnDtoRequest } from '../requests/updateColumn.dto.request';
 
 @Controller('boards/:boardId/columns/')
-@ApiTags('boards')
+@ApiTags('columns')
 export class BoardColumnController {
   constructor(private readonly prisma: PrismaService) {}
 
