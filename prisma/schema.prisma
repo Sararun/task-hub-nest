@@ -27,6 +27,8 @@ model Task {
   deadline    DateTime?
   owner_id    Int
   owner       User      @relation(fields: [owner_id], references: [id])
+  column      Column    @relation(fields: [column_id], references: [id], onDelete: Cascade)
+  column_id   Int
   timestamps  DateTime  @db.Timestamp()
 }
 
@@ -36,6 +38,7 @@ model Column {
   column_number Int
   board         Board  @relation(fields: [board_id], references: [id], onDelete: Cascade)
   board_id      Int
+  Task          Task[]
 
   @@unique([board_id, column_number])
 }

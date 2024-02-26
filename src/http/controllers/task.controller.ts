@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpStatus,
   InternalServerErrorException,
   Param,
+  ParseIntPipe,
   Post,
   Req,
   UnauthorizedException,
@@ -13,10 +15,10 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../services/prisma.service';
 import { AddTaskDtoRequest } from '../requests/addTask.dto.request';
-import { Prisma, User } from '@prisma/client';
-import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Board, Column, Prisma, User } from '@prisma/client';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
-@Controller('tasks')
+@Controller('boards/:boardId/columns/:columnId/tasks/')
 @ApiTags('tasks')
 @UseGuards(AuthGuard('jwt'))
 @ApiResponse({
@@ -28,6 +30,16 @@ import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
     },
   },
   description: 'User not authorized',
+})
+@ApiResponse({
+  status: HttpStatus.NOT_FOUND,
+  schema: {
+    example: {
+      message: 'The board you wanted to add a column to does not exist',
+      statusCode: HttpStatus.NOT_FOUND,
+    },
+  },
+  description: 'Task not found',
 })
 export class TaskController {
   constructor(private readonly prisma: PrismaService) {}
@@ -58,12 +70,39 @@ export class TaskController {
   })
   @Post()
   async add(
+    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('columnId', ParseIntPipe) columnId: number,
     @Body() addTaskDto: AddTaskDtoRequest,
     @Req() request: any,
   ): Promise<{
     message: string;
     statusCode: HttpStatus;
   }> {
+    const board: Board | null = await this.prisma.board.findUnique({
+      where: {
+        id: boardId,
+      },
+    });
+    if (board == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: 'The board you wanted to add a column to does not exist',
+      };
+    }
+
+    const column: Column | null = await this.prisma.column.findUnique({
+      where: {
+        id: columnId,
+        board_id: boardId,
+      },
+    });
+
+    if (column == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "The column what you wanted doesn't exist",
+      };
+    }
     const user: User | null = await this.prisma.user.findUnique({
       where: {
         email: request.user.email,
@@ -78,6 +117,8 @@ export class TaskController {
         description: addTaskDto.description,
         deadline: addTaskDto.deadline,
         owner_id: user.id,
+        column_id: columnId,
+        timestamps: new Date(),
       },
     });
     return {
@@ -116,23 +157,43 @@ export class TaskController {
     },
     description: 'Internal server error.',
   })
-  @ApiParam({
-    name: 'id',
-    required: true,
-    description: 'Id of the task to be deleted',
-    example: 1,
-  })
-  @Delete(':id')
+  @Delete(':taskId')
   async delete(
-    @Param('id') taskId: number,
+    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('columnId', ParseIntPipe) columnId: number,
+    @Param('taskId') taskId: number,
     @Req() request: any,
   ): Promise<{ message: string; statusCode: HttpStatus }> {
+    const board: Board | null = await this.prisma.board.findUnique({
+      where: {
+        id: boardId,
+      },
+    });
+    if (board == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "The board what you wanted doesn't exist",
+      };
+    }
+
+    const column: Column | null = await this.prisma.column.findUnique({
+      where: {
+        id: columnId,
+        board_id: boardId,
+      },
+    });
+
+    if (column == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "The column what you wanted doesn't exist",
+      };
+    }
     const user: User | null = await this.prisma.user.findUnique({
       where: {
         email: request.user.email,
       },
     });
-
     if (!user) {
       throw UnauthorizedException;
     }
@@ -141,6 +202,7 @@ export class TaskController {
       await this.prisma.task.delete({
         where: {
           owner_id: user.id,
+          column_id: columnId,
           id: taskId,
         },
       });
@@ -158,5 +220,85 @@ export class TaskController {
       message: 'Task was been deleted successfully',
       statusCode: HttpStatus.OK,
     };
+  }
+
+  @Get()
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    schema: {
+      example: {
+        payload: [
+          {
+            id: 1,
+            images: null,
+            name: 'task_name',
+            description: null,
+            deadline: '2024-02-28T20:21:21.168Z',
+            owner_id: 1,
+            column_id: 4,
+            timestamps: '2024-02-26T14:41:42.307Z',
+          },
+          {
+            id: 2,
+            images: null,
+            name: 'task_name',
+            description: null,
+            deadline: '2024-02-28T20:21:21.168Z',
+            owner_id: 1,
+            column_id: 4,
+            timestamps: '2024-02-26T14:41:47.734Z',
+          },
+        ],
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      },
+    },
+    description: 'Internal server error.',
+  })
+  async get(
+    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('columnId', ParseIntPipe) columnId: number,
+    @Param('taskId') taskId: number,
+    @Req() request: any,
+  ) {
+    const board: Board | null = await this.prisma.board.findUnique({
+      where: {
+        id: boardId,
+      },
+    });
+    if (board == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "The board what you wanted doesn't exist",
+      };
+    }
+
+    const column: Column | null = await this.prisma.column.findUnique({
+      where: {
+        id: columnId,
+        board_id: boardId,
+      },
+    });
+
+    if (column == null) {
+      return {
+        statusCode: HttpStatus.NOT_FOUND,
+        message: "The column what you wanted doesn't exist",
+      };
+    }
+    const user: User | null = await this.prisma.user.findUnique({
+      where: {
+        email: request.user.email,
+      },
+    });
+    if (!user) {
+      throw UnauthorizedException;
+    }
+    const payload = await this.prisma.task.findMany({
+      where: {
+        column_id: columnId,
+      },
+    });
+
+    return { statusCode: HttpStatus.OK, payload: payload };
   }
 }
