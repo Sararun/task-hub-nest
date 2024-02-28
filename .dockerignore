@@ -1,0 +1,12 @@
+node_modules
+Dockerfile
+dist
+
+.git
+.gitignore
+
+.idea
+.vscode
+
+*.test.js
+*.spec.js
