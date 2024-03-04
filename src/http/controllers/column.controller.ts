@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   HttpStatus,
-  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Patch,
@@ -29,6 +28,12 @@ export class ColumnController {
       example: {
         message: 'Column was been successfully created',
         statusCode: HttpStatus.CREATED,
+        payload: {
+          id: 9,
+          name: 'third',
+          column_number: 6,
+          board_id: 2,
+        },
       },
     },
   })
@@ -112,6 +117,12 @@ export class ColumnController {
       example: {
         message: 'The column was been updated successfully',
         statusCode: HttpStatus.OK,
+        payload: {
+          id: 5,
+          name: 'five',
+          column_number: 0,
+          board_id: 2,
+        },
       },
     },
     description: 'The column was been updated successfully.',
@@ -202,7 +213,10 @@ export class ColumnController {
             });
             const targetColumn = await prisma.column.update({
               where: { id: columnId },
-              data: { column_number: updateColumnDto.columnNumber },
+              data: {
+                column_number: updateColumnDto.columnNumber,
+                name: updateColumnDto?.name,
+              },
             });
             await prisma.column.update({
               where: {
@@ -306,34 +320,35 @@ export class ColumnController {
     const columnsToUpdate = await this.prisma.column.findMany({
       where: {
         board_id: boardId,
+        id: {
+          not: columnId,
+        },
         column_number: {
           gte: deletableColumn.column_number,
         },
       },
+      orderBy: {
+        column_number: 'asc',
+      },
     });
 
     if (columnsToUpdate.length > 0) {
-      const updatePromises = columnsToUpdate.map((column: Column) => {
-        return this.prisma.column.update({
-          where: { id: column.id, board_id: boardId },
-          data: { column_number: column.column_number - 1 },
-        });
-      });
-
-      updatePromises.push(
-        this.prisma.column.delete({
+      await this.prisma.$transaction(async (prisma) => {
+        await prisma.column.delete({
           where: {
             id: columnId,
             board_id: boardId,
           },
-        }),
-      );
+        });
 
-      try {
-        await this.prisma.$transaction(updatePromises);
-      } catch (error) {
-        throw new InternalServerErrorException();
-      }
+        // Использование цикла for...of для обработки асинхронных операций
+        for (const column of columnsToUpdate) {
+          await prisma.column.update({
+            where: { id: column.id, board_id: boardId },
+            data: { column_number: column.column_number - 1 },
+          });
+        }
+      });
 
       return {
         statusCode: HttpStatus.OK,
@@ -400,7 +415,13 @@ export class ColumnController {
     }
     const payload: Column[] | null = await this.prisma.column.findMany({
       where: { board_id: boardId },
+      orderBy: {
+        column_number: 'asc',
+      },
     });
+    if (payload == null) {
+      return { statusCode: HttpStatus.OK, payload: [] };
+    }
     return { statusCode: HttpStatus.OK, payload: payload };
   }
 }
