@@ -52,6 +52,16 @@ export class TaskController {
       example: {
         message: 'Task was been successfully created',
         statusCode: HttpStatus.CREATED,
+        payload: {
+          id: 11,
+          images: null,
+          name: 'name',
+          description: null,
+          deadline: '2024-03-05T14:49:39.907Z',
+          owner_id: 1,
+          column_id: 5,
+          timestamps: '2024-03-04T14:49:39.907Z',
+        },
       },
     },
   })
@@ -79,6 +89,7 @@ export class TaskController {
   ): Promise<{
     message: string;
     statusCode: HttpStatus;
+    payload: Task | null;
   }> {
     const board: Board | null = await this.prisma.board.findUnique({
       where: {
@@ -89,6 +100,7 @@ export class TaskController {
       return {
         statusCode: HttpStatus.NOT_FOUND,
         message: 'The board you wanted to add a column to does not exist',
+        payload: null,
       };
     }
 
@@ -103,6 +115,7 @@ export class TaskController {
       return {
         statusCode: HttpStatus.NOT_FOUND,
         message: "The column what you wanted doesn't exist",
+        payload: null,
       };
     }
     const user: User | null = await this.prisma.user.findUnique({
@@ -113,11 +126,13 @@ export class TaskController {
     if (!user) {
       throw UnauthorizedException;
     }
-    await this.prisma.task.create({
+    const addDay = new Date();
+    addDay.setDate(addDay.getDate() + 1);
+    const task = await this.prisma.task.create({
       data: {
         name: addTaskDto.name,
         description: addTaskDto.description,
-        deadline: addTaskDto.deadline,
+        deadline: addTaskDto?.deadline ?? addDay,
         owner_id: user.id,
         column_id: columnId,
         timestamps: new Date(),
@@ -126,6 +141,7 @@ export class TaskController {
     return {
       statusCode: HttpStatus.CREATED,
       message: 'Task was been successfully created',
+      payload: task,
     };
   }
 
@@ -215,7 +231,6 @@ export class TaskController {
           statusCode: HttpStatus.NOT_FOUND,
         };
       }
-      console.log(error);
       throw InternalServerErrorException;
     }
 
@@ -294,16 +309,36 @@ export class TaskController {
     if (!user) {
       throw UnauthorizedException;
     }
-    const payload: Task[] | [] = await this.prisma.task.findMany({
+    const task: Task[] | [] = await this.prisma.task.findMany({
       where: {
         column_id: columnId,
       },
     });
 
-    return { statusCode: HttpStatus.OK, payload: payload };
+    return { statusCode: HttpStatus.OK, payload: task };
   }
 
   @Patch(':taskId')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        payload: [
+          {
+            id: 1,
+            images: null,
+            name: 'task_name',
+            description: null,
+            deadline: '2024-02-28T20:21:21.168Z',
+            owner_id: 1,
+            column_id: 4,
+            timestamps: '2024-02-26T14:41:42.307Z',
+          },
+        ],
+        statusCode: HttpStatus.OK,
+      },
+    },
+  })
   async update(
     @Param('boardId', ParseIntPipe) boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
@@ -344,9 +379,10 @@ export class TaskController {
     if (!user) {
       throw UnauthorizedException;
     }
-    await this.prisma.task.update({
+    const task = await this.prisma.task.update({
       where: {
         id: taskId,
+        column_id: columnId,
       },
       data: {
         name: updateTaskDto.name,
@@ -355,5 +391,6 @@ export class TaskController {
         column_id: columnId,
       },
     });
+    return { statusCode: HttpStatus.OK, payload: task };
   }
 }

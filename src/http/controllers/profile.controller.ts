@@ -81,7 +81,7 @@ export class ProfileController {
   async setProfileData(
     @Body() setProfileDto: SetProfileDataDtoRequest,
     @Req() request: any,
-  ): Promise<{ statusCode: HttpStatus }> {
+  ) {
     try {
       const updatedUser: User = await this.prisma.user.update({
         where: {
@@ -91,8 +91,11 @@ export class ProfileController {
           name: setProfileDto.name,
         },
       });
-      if (!!updatedUser) {
-        return { statusCode: HttpStatus.OK };
+      if (updatedUser) {
+        return {
+          statusCode: HttpStatus.OK,
+          payload: { name: setProfileDto.name },
+        };
       }
       return { statusCode: HttpStatus.NOT_FOUND };
     } catch (error) {
@@ -106,8 +109,10 @@ export class ProfileController {
     status: HttpStatus.OK,
     schema: {
       example: {
-        email: 'email@mail.com',
-        name: 'John Doe',
+        payload: {
+          email: 'email@mail.com',
+          name: 'John Doe',
+        },
         statusCode: HttpStatus.OK,
       },
     },
@@ -115,8 +120,10 @@ export class ProfileController {
   })
   async get(@Req() request: any): Promise<{
     statusCode: HttpStatus;
-    email: string | null | undefined;
-    name: string | null | undefined;
+    payload: {
+      email: string | null | undefined;
+      name: string | null | undefined;
+    };
   }> {
     const user: User | null = await this.prisma.user.findUnique({
       where: {
@@ -125,8 +132,10 @@ export class ProfileController {
     });
     return {
       statusCode: HttpStatus.OK,
-      email: user?.email,
-      name: user?.name,
+      payload: {
+        email: user?.email,
+        name: user?.name,
+      },
     };
   }
 }

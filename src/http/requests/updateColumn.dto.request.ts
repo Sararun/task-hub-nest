@@ -20,7 +20,6 @@ export class UpdateColumnDtoRequest {
   @ApiProperty({
     description: 'The number of column.',
     example: 0,
-    maxLength: 255,
     required: false,
     type: Number,
   })

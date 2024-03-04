@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   HttpStatus,
-  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Patch,
@@ -29,6 +28,12 @@ export class ColumnController {
       example: {
         message: 'Column was been successfully created',
         statusCode: HttpStatus.CREATED,
+        payload: {
+          id: 9,
+          name: 'third',
+          column_number: 6,
+          board_id: 2,
+        },
       },
     },
   })
@@ -50,6 +55,7 @@ export class ColumnController {
   ): Promise<{
     statusCode: HttpStatus;
     message: string;
+    payload: Column | null;
   }> {
     const board: Board | null = await this.prisma.board.findUnique({
       where: {
@@ -60,9 +66,10 @@ export class ColumnController {
       return {
         statusCode: HttpStatus.NOT_FOUND,
         message: 'The board you wanted to add a column to does not exist',
+        payload: null,
       };
     }
-    const column: { _max: { column_number: number | null } } =
+    const columnWithMaxNumber: { _max: { column_number: number | null } } =
       await this.prisma.column.aggregate({
         where: {
           board_id: boardId,
@@ -73,13 +80,13 @@ export class ColumnController {
       });
 
     let columnMaxNumber: number;
-    if (column._max.column_number === null) {
+    if (columnWithMaxNumber._max.column_number === null) {
       columnMaxNumber = 0;
     } else {
-      columnMaxNumber = column._max.column_number + 1;
+      columnMaxNumber = columnWithMaxNumber._max.column_number + 1;
     }
 
-    await this.prisma.column.create({
+    const column: Column = await this.prisma.column.create({
       data: {
         name: createColumnDto.name,
         column_number: columnMaxNumber,
@@ -90,6 +97,7 @@ export class ColumnController {
     return {
       statusCode: HttpStatus.CREATED,
       message: 'Column was been successfully created',
+      payload: column,
     };
   }
 
@@ -109,6 +117,12 @@ export class ColumnController {
       example: {
         message: 'The column was been updated successfully',
         statusCode: HttpStatus.OK,
+        payload: {
+          id: 5,
+          name: 'five',
+          column_number: 0,
+          board_id: 2,
+        },
       },
     },
     description: 'The column was been updated successfully.',
@@ -137,10 +151,7 @@ export class ColumnController {
     @Param('boardId', ParseIntPipe) boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
     @Body() updateColumnDto: UpdateColumnDtoRequest,
-  ): Promise<{
-    statusCode: HttpStatus;
-    message: string;
-  }> {
+  ) {
     const board: Board | null = await this.prisma.board.findUnique({
       where: {
         id: boardId,
@@ -150,6 +161,7 @@ export class ColumnController {
       return {
         statusCode: HttpStatus.NOT_FOUND,
         message: 'The board you wanted to add a column to does not exist',
+        payload: null,
       };
     }
 
@@ -163,62 +175,74 @@ export class ColumnController {
       return {
         statusCode: HttpStatus.NOT_FOUND,
         message: "The column what you want to update doesn't exist",
+        payload: null,
       };
     }
 
-    const existColumnNumber: Column | null = await this.prisma.column.findFirst(
-      {
-        where: {
-          board_id: boardId,
-          column_number: updateColumnDto.columnNumber,
-        },
-      },
-    );
-
-    if (existColumnNumber != null) {
-      const columnsToUpdate = await this.prisma.column.findMany({
-        where: {
-          board_id: boardId,
-          column_number: {
-            gte: updateColumnDto.columnNumber,
+    if (updateColumnDto.columnNumber != undefined) {
+      const existColumnNumber: Column | null =
+        await this.prisma.column.findFirst({
+          where: {
+            board_id: boardId,
+            column_number: updateColumnDto.columnNumber,
+            id: {
+              not: updatableColumn.id,
+            },
           },
-        },
-      });
-
-      if (columnsToUpdate.length > 0) {
-        const updatePromises = columnsToUpdate.map((column: Column) => {
-          return this.prisma.column.update({
-            where: { id: column.id },
-            data: { column_number: column.column_number + 1 },
-          });
         });
-
-        updatePromises.push(
-          this.prisma.column.update({
-            where: { id: columnId },
-            data: {
-              name: updateColumnDto.name,
+      if (existColumnNumber != null) {
+        const columnForSwap: Column | null = await this.prisma.column.findFirst(
+          {
+            where: {
+              board_id: boardId,
               column_number: updateColumnDto.columnNumber,
             },
-          }),
+          },
         );
+        if (columnForSwap != null) {
+          const result = await this.prisma.$transaction(async (prisma) => {
+            await prisma.column.update({
+              where: {
+                id: columnForSwap.id,
+                board_id: boardId,
+                column_number: columnForSwap.column_number,
+              },
+              data: {
+                column_number: 1000 + columnForSwap.column_number,
+              },
+            });
+            const targetColumn = await prisma.column.update({
+              where: { id: columnId },
+              data: {
+                column_number: updateColumnDto.columnNumber,
+                name: updateColumnDto?.name,
+              },
+            });
+            await prisma.column.update({
+              where: {
+                id: columnForSwap.id,
+                board_id: boardId,
+                column_number: columnForSwap.column_number + 1000,
+              },
+              data: {
+                column_number: updatableColumn.column_number,
+              },
+            });
+            return targetColumn;
+          });
 
-        try {
-          await this.prisma.$transaction(updatePromises);
-        } catch (error) {
-          throw new InternalServerErrorException();
+          return {
+            statusCode: HttpStatus.OK,
+            message: 'The column was been updated successfully',
+            payload: result,
+          };
         }
-
-        return {
-          statusCode: HttpStatus.OK,
-          message: 'The column was been updated successfully',
-        };
       }
     }
-
-    await this.prisma.column.update({
+    const updatedColumn = await this.prisma.column.update({
       where: {
         id: columnId,
+        board_id: boardId,
       },
       data: {
         name: updateColumnDto?.name,
@@ -228,6 +252,7 @@ export class ColumnController {
     return {
       statusCode: HttpStatus.OK,
       message: 'The column was been updated successfully',
+      payload: updatedColumn,
     };
   }
 
@@ -295,34 +320,35 @@ export class ColumnController {
     const columnsToUpdate = await this.prisma.column.findMany({
       where: {
         board_id: boardId,
+        id: {
+          not: columnId,
+        },
         column_number: {
           gte: deletableColumn.column_number,
         },
       },
+      orderBy: {
+        column_number: 'asc',
+      },
     });
 
     if (columnsToUpdate.length > 0) {
-      const updatePromises = columnsToUpdate.map((column: Column) => {
-        return this.prisma.column.update({
-          where: { id: column.id, board_id: boardId },
-          data: { column_number: column.column_number - 1 },
-        });
-      });
-
-      updatePromises.push(
-        this.prisma.column.delete({
+      await this.prisma.$transaction(async (prisma) => {
+        await prisma.column.delete({
           where: {
             id: columnId,
             board_id: boardId,
           },
-        }),
-      );
+        });
 
-      try {
-        await this.prisma.$transaction(updatePromises);
-      } catch (error) {
-        throw new InternalServerErrorException();
-      }
+        // Использование цикла for...of для обработки асинхронных операций
+        for (const column of columnsToUpdate) {
+          await prisma.column.update({
+            where: { id: column.id, board_id: boardId },
+            data: { column_number: column.column_number - 1 },
+          });
+        }
+      });
 
       return {
         statusCode: HttpStatus.OK,
@@ -389,7 +415,13 @@ export class ColumnController {
     }
     const payload: Column[] | null = await this.prisma.column.findMany({
       where: { board_id: boardId },
+      orderBy: {
+        column_number: 'asc',
+      },
     });
+    if (payload == null) {
+      return { statusCode: HttpStatus.OK, payload: [] };
+    }
     return { statusCode: HttpStatus.OK, payload: payload };
   }
 }

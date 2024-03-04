@@ -13,6 +13,7 @@ import { PrismaService } from '../../services/prisma.service';
 import { AddBoardDtoRequest } from '../requests/addBoard.dto.request';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { Board } from '@prisma/client';
 
 @Controller('boards')
 @ApiTags('boards')
@@ -39,9 +40,9 @@ export class BoardController {
     },
   })
   @Get()
-  get() {
-    const payload = this.prisma.board.findMany();
-    return { statusCode: HttpStatus.OK, payload: payload };
+  async get() {
+    const boards: Board[] = await this.prisma.board.findMany();
+    return { statusCode: HttpStatus.OK, payload: boards };
   }
 
   @ApiResponse({
@@ -50,6 +51,10 @@ export class BoardController {
       example: {
         message: 'The board was been successfully created',
         statusCode: HttpStatus.OK,
+        payload: {
+          id: 7,
+          name: 'third',
+        },
       },
     },
   })
@@ -57,8 +62,9 @@ export class BoardController {
   async create(@Body() addBoardDto: AddBoardDtoRequest): Promise<{
     statusCode: HttpStatus.OK;
     message: 'The board was been successfully created';
+    payload: Board;
   }> {
-    await this.prisma.board.create({
+    const board: Board = await this.prisma.board.create({
       data: {
         name: addBoardDto.name,
       },
@@ -67,6 +73,7 @@ export class BoardController {
     return {
       statusCode: HttpStatus.OK,
       message: 'The board was been successfully created',
+      payload: board,
     };
   }
 
