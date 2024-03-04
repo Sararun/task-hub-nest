@@ -137,10 +137,7 @@ export class ColumnController {
     @Param('boardId', ParseIntPipe) boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
     @Body() updateColumnDto: UpdateColumnDtoRequest,
-  ): Promise<{
-    statusCode: HttpStatus;
-    message: string;
-  }> {
+  ) {
     const board: Board | null = await this.prisma.board.findUnique({
       where: {
         id: boardId,
@@ -166,48 +163,54 @@ export class ColumnController {
       };
     }
 
-    const existColumnNumber: Column | null = await this.prisma.column.findFirst(
-      {
-        where: {
-          board_id: boardId,
-          column_number: updateColumnDto.columnNumber,
-        },
-      },
-    );
-
-    if (existColumnNumber != null) {
-      const columnsToUpdate = await this.prisma.column.findMany({
-        where: {
-          board_id: boardId,
-          column_number: {
-            gte: updateColumnDto.columnNumber,
+    if (updateColumnDto.columnNumber != undefined) {
+      const existColumnNumber: Column | null =
+        await this.prisma.column.findFirst({
+          where: {
+            board_id: boardId,
+            column_number: updateColumnDto.columnNumber,
+            id: {
+              not: updatableColumn.id,
+            },
           },
-        },
-      });
-
-      if (columnsToUpdate.length > 0) {
-        const updatePromises = columnsToUpdate.map((column: Column) => {
-          return this.prisma.column.update({
-            where: { id: column.id },
-            data: { column_number: column.column_number + 1 },
-          });
         });
-
-        updatePromises.push(
-          this.prisma.column.update({
-            where: { id: columnId },
-            data: {
-              name: updateColumnDto.name,
+      if (existColumnNumber != null) {
+        const columnForSwap: Column | null = await this.prisma.column.findFirst(
+          {
+            where: {
+              board_id: boardId,
               column_number: updateColumnDto.columnNumber,
             },
-          }),
+          },
         );
-
-        try {
-          await this.prisma.$transaction(updatePromises);
-        } catch (error) {
-          throw new InternalServerErrorException();
-        }
+        if (columnForSwap != null) {
+          const result = await this.prisma.$transaction(async (prisma) => {
+            await prisma.column.update({
+              where: {
+                id: columnForSwap.id,
+                board_id: boardId,
+                column_number: columnForSwap.column_number,
+              },
+              data: {
+                column_number: 1000 + columnForSwap.column_number,
+              },
+            });
+            const targetColumn = await prisma.column.update({
+              where: { id: columnId },
+              data: { column_number: updateColumnDto.columnNumber },
+            });
+            await prisma.column.update({
+              where: {
+                id: columnForSwap.id,
+                board_id: boardId,
+                column_number: columnForSwap.column_number + 1000,
+              },
+              data: {
+                column_number: updatableColumn.column_number,
+              },
+            });
+            return targetColumn;
+          });
 
         return {
           statusCode: HttpStatus.OK,
@@ -217,8 +220,17 @@ export class ColumnController {
     }
 
     await this.prisma.column.update({
+          return {
+            statusCode: HttpStatus.OK,
+            message: 'The column was been updated successfully',
+          };
+        }
+      }
+    }
+    const updatedColumn = await this.prisma.column.update({
       where: {
         id: columnId,
+        board_id: boardId,
       },
       data: {
         name: updateColumnDto?.name,
