@@ -50,6 +50,7 @@ export class ColumnController {
   ): Promise<{
     statusCode: HttpStatus;
     message: string;
+    payload: Column | null;
   }> {
     const board: Board | null = await this.prisma.board.findUnique({
       where: {
@@ -60,9 +61,10 @@ export class ColumnController {
       return {
         statusCode: HttpStatus.NOT_FOUND,
         message: 'The board you wanted to add a column to does not exist',
+        payload: null,
       };
     }
-    const column: { _max: { column_number: number | null } } =
+    const columnWithMaxNumber: { _max: { column_number: number | null } } =
       await this.prisma.column.aggregate({
         where: {
           board_id: boardId,
@@ -73,13 +75,13 @@ export class ColumnController {
       });
 
     let columnMaxNumber: number;
-    if (column._max.column_number === null) {
+    if (columnWithMaxNumber._max.column_number === null) {
       columnMaxNumber = 0;
     } else {
-      columnMaxNumber = column._max.column_number + 1;
+      columnMaxNumber = columnWithMaxNumber._max.column_number + 1;
     }
 
-    await this.prisma.column.create({
+    const column: Column = await this.prisma.column.create({
       data: {
         name: createColumnDto.name,
         column_number: columnMaxNumber,
@@ -90,6 +92,7 @@ export class ColumnController {
     return {
       statusCode: HttpStatus.CREATED,
       message: 'Column was been successfully created',
+      payload: column,
     };
   }
 
@@ -147,6 +150,7 @@ export class ColumnController {
       return {
         statusCode: HttpStatus.NOT_FOUND,
         message: 'The board you wanted to add a column to does not exist',
+        payload: null,
       };
     }
 
@@ -160,6 +164,7 @@ export class ColumnController {
       return {
         statusCode: HttpStatus.NOT_FOUND,
         message: "The column what you want to update doesn't exist",
+        payload: null,
       };
     }
 
@@ -212,17 +217,10 @@ export class ColumnController {
             return targetColumn;
           });
 
-        return {
-          statusCode: HttpStatus.OK,
-          message: 'The column was been updated successfully',
-        };
-      }
-    }
-
-    await this.prisma.column.update({
           return {
             statusCode: HttpStatus.OK,
             message: 'The column was been updated successfully',
+            payload: result,
           };
         }
       }
@@ -240,6 +238,7 @@ export class ColumnController {
     return {
       statusCode: HttpStatus.OK,
       message: 'The column was been updated successfully',
+      payload: updatedColumn,
     };
   }
 
