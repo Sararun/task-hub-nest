@@ -1,6 +1,7 @@
 import {
   IsDate,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   MaxLength,
@@ -43,4 +44,13 @@ export class CreateTaskDtoRequest {
     type: Date,
   })
   readonly deadline: Date | null | undefined;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiProperty({
+    description: 'Status id',
+    example: '1',
+    required: false,
+  })
+  statusId: number | undefined;
 }
