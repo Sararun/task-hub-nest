@@ -11,6 +11,7 @@ import { ProfileModule } from './modules/profile.module';
 import { TaskController } from './http/controllers/task.controller';
 import { BoardController } from './http/controllers/board.controller';
 import { ColumnController } from './http/controllers/column.controller';
+import { StatusController } from './http/controllers/status.controller';
 
 @Module({
   imports: [AuthModule, ProfileModule],
@@ -21,6 +22,7 @@ import { ColumnController } from './http/controllers/column.controller';
     BoardController,
     ColumnController,
     TaskController,
+    StatusController,
   ],
   providers: [AppService, UserService, PrismaService, AuthService],
 })

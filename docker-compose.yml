@@ -11,6 +11,8 @@ services:
       - NODE_ENV=production
     depends_on:
       - db
+    volumes:
+      - .:/var/www/app
     env_file:
       - .env
   db:

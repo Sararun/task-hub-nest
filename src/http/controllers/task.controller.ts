@@ -16,9 +16,12 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../services/prisma.service';
 import { CreateTaskDtoRequest } from '../requests/tasks/createTask.dto.request';
-import { Board, Column, Prisma, Task, User } from '@prisma/client';
+import { Prisma, Task, User } from '@prisma/client';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateTaskDtoRequest } from '../requests/tasks/updateTask.dto.request';
+import { ValidateBoardExistsValidator } from '../../validators/validateBoardExists.validator';
+import { ValidateColumnExistsValidator } from '../../validators/validateColumnExists.validator';
+import { ValidateStatusExistsValidator } from '../../validators/validateStatusExists.validator';
 
 @Controller('boards/:boardId/columns/:columnId/tasks/')
 @ApiTags('tasks')
@@ -60,6 +63,7 @@ export class TaskController {
           deadline: '2024-03-05T14:49:39.907Z',
           owner_id: 1,
           column_id: 5,
+          statusId: 1,
           timestamps: '2024-03-04T14:49:39.907Z',
         },
       },
@@ -82,42 +86,13 @@ export class TaskController {
   })
   @Post()
   async add(
-    @Param('boardId', ParseIntPipe) boardId: number,
-    @Param('columnId', ParseIntPipe) columnId: number,
-    @Body() addTaskDto: CreateTaskDtoRequest,
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+    @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
+    columnId: number,
+    @Body(ValidateStatusExistsValidator) addTaskDto: CreateTaskDtoRequest,
     @Req() request: any,
-  ): Promise<{
-    message: string;
-    statusCode: HttpStatus;
-    payload: Task | null;
-  }> {
-    const board: Board | null = await this.prisma.board.findUnique({
-      where: {
-        id: boardId,
-      },
-    });
-    if (board == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'The board you wanted to add a column to does not exist',
-        payload: null,
-      };
-    }
-
-    const column: Column | null = await this.prisma.column.findUnique({
-      where: {
-        id: columnId,
-        board_id: boardId,
-      },
-    });
-
-    if (column == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The column what you wanted doesn't exist",
-        payload: null,
-      };
-    }
+  ) {
     const user: User | null = await this.prisma.user.findUnique({
       where: {
         email: request.user.email,
@@ -135,6 +110,7 @@ export class TaskController {
         deadline: addTaskDto?.deadline ?? addDay,
         owner_id: user.id,
         column_id: columnId,
+        statusId: addTaskDto.statusId ?? 1,
         timestamps: new Date(),
       },
     });
@@ -177,36 +153,13 @@ export class TaskController {
   })
   @Delete(':taskId')
   async delete(
-    @Param('boardId', ParseIntPipe) boardId: number,
-    @Param('columnId', ParseIntPipe) columnId: number,
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+    @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
+    columnId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
     @Req() request: any,
   ): Promise<{ message: string; statusCode: HttpStatus }> {
-    const board: Board | null = await this.prisma.board.findUnique({
-      where: {
-        id: boardId,
-      },
-    });
-    if (board == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The board what you wanted doesn't exist",
-      };
-    }
-
-    const column: Column | null = await this.prisma.column.findUnique({
-      where: {
-        id: columnId,
-        board_id: boardId,
-      },
-    });
-
-    if (column == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The column what you wanted doesn't exist",
-      };
-    }
     const user: User | null = await this.prisma.user.findUnique({
       where: {
         email: request.user.email,
@@ -254,6 +207,7 @@ export class TaskController {
             deadline: '2024-02-28T20:21:21.168Z',
             owner_id: 1,
             column_id: 4,
+            statusId: 1,
             timestamps: '2024-02-26T14:41:42.307Z',
           },
           {
@@ -264,6 +218,7 @@ export class TaskController {
             deadline: '2024-02-28T20:21:21.168Z',
             owner_id: 1,
             column_id: 4,
+            statusId: 1,
             timestamps: '2024-02-26T14:41:47.734Z',
           },
         ],
@@ -272,43 +227,11 @@ export class TaskController {
     },
   })
   async get(
-    @Param('boardId', ParseIntPipe) boardId: number,
-    @Param('columnId', ParseIntPipe) columnId: number,
-    @Req() request: any,
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+    @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
+    columnId: number,
   ) {
-    const board: Board | null = await this.prisma.board.findUnique({
-      where: {
-        id: boardId,
-      },
-    });
-    if (board == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The board what you wanted doesn't exist",
-      };
-    }
-
-    const column: Column | null = await this.prisma.column.findUnique({
-      where: {
-        id: columnId,
-        board_id: boardId,
-      },
-    });
-
-    if (column == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The column what you wanted doesn't exist",
-      };
-    }
-    const user: User | null = await this.prisma.user.findUnique({
-      where: {
-        email: request.user.email,
-      },
-    });
-    if (!user) {
-      throw UnauthorizedException;
-    }
     const task: Task[] | [] = await this.prisma.task.findMany({
       where: {
         column_id: columnId,
@@ -332,6 +255,7 @@ export class TaskController {
             deadline: '2024-02-28T20:21:21.168Z',
             owner_id: 1,
             column_id: 4,
+            statusId: 1,
             timestamps: '2024-02-26T14:41:42.307Z',
           },
         ],
@@ -340,45 +264,13 @@ export class TaskController {
     },
   })
   async update(
-    @Param('boardId', ParseIntPipe) boardId: number,
-    @Param('columnId', ParseIntPipe) columnId: number,
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+    @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
+    columnId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
-    @Req() request: any,
-    @Body() updateTaskDto: UpdateTaskDtoRequest,
+    @Body(ValidateStatusExistsValidator) updateTaskDto: UpdateTaskDtoRequest,
   ) {
-    const board: Board | null = await this.prisma.board.findUnique({
-      where: {
-        id: boardId,
-      },
-    });
-    if (board == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The board what you wanted doesn't exist",
-      };
-    }
-
-    const column: Column | null = await this.prisma.column.findUnique({
-      where: {
-        id: columnId,
-        board_id: boardId,
-      },
-    });
-
-    if (column == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The column what you wanted doesn't exist",
-      };
-    }
-    const user: User | null = await this.prisma.user.findUnique({
-      where: {
-        email: request.user.email,
-      },
-    });
-    if (!user) {
-      throw UnauthorizedException;
-    }
     const task = await this.prisma.task.update({
       where: {
         id: taskId,
@@ -389,6 +281,7 @@ export class TaskController {
         description: updateTaskDto.description,
         deadline: updateTaskDto.deadline,
         column_id: columnId,
+        statusId: updateTaskDto?.statusId,
       },
     });
     return { statusCode: HttpStatus.OK, payload: task };
