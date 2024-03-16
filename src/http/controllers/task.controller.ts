@@ -16,9 +16,12 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../services/prisma.service';
 import { CreateTaskDtoRequest } from '../requests/tasks/createTask.dto.request';
-import { Board, Column, Prisma, Task, User } from '@prisma/client';
+import { Prisma, Task, User } from '@prisma/client';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateTaskDtoRequest } from '../requests/tasks/updateTask.dto.request';
+import { ValidateBoardExistsValidator } from '../../validators/validateBoardExists.validator';
+import { ValidateColumnExistsValidator } from '../../validators/validateColumnExists.validator';
+import { ValidateStatusExistsValidator } from '../../validators/validateStatusExists.validator';
 
 @Controller('boards/:boardId/columns/:columnId/tasks/')
 @ApiTags('tasks')
@@ -266,42 +269,8 @@ export class TaskController {
     @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
     columnId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
-    @Req() request: any,
-    @Body() updateTaskDto: UpdateTaskDtoRequest,
+    @Body(ValidateStatusExistsValidator) updateTaskDto: UpdateTaskDtoRequest,
   ) {
-    const board: Board | null = await this.prisma.board.findUnique({
-      where: {
-        id: boardId,
-      },
-    });
-    if (board == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The board what you wanted doesn't exist",
-      };
-    }
-
-    const column: Column | null = await this.prisma.column.findUnique({
-      where: {
-        id: columnId,
-        board_id: boardId,
-      },
-    });
-
-    if (column == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The column what you wanted doesn't exist",
-      };
-    }
-    const user: User | null = await this.prisma.user.findUnique({
-      where: {
-        email: request.user.email,
-      },
-    });
-    if (!user) {
-      throw UnauthorizedException;
-    }
     const task = await this.prisma.task.update({
       where: {
         id: taskId,
