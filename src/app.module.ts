@@ -12,6 +12,7 @@ import { TaskController } from './http/controllers/task.controller';
 import { BoardController } from './http/controllers/board.controller';
 import { ColumnController } from './http/controllers/column.controller';
 import { StatusController } from './http/controllers/status.controller';
+import { CommentController } from './http/controllers/comment.controller';
 
 @Module({
   imports: [AuthModule, ProfileModule],
@@ -23,6 +24,7 @@ import { StatusController } from './http/controllers/status.controller';
     ColumnController,
     TaskController,
     StatusController,
+    CommentController,
   ],
   providers: [AppService, UserService, PrismaService, AuthService],
 })
