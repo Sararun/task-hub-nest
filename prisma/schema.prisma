@@ -12,12 +12,13 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  name       String   @db.VarChar(255)
-  email      String   @unique @db.VarChar(255)
-  password   String   @db.VarChar(30)
-  timestamps DateTime @db.Timestamp()
-  Task       Task[]
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  email      String    @unique @db.VarChar(255)
+  password   String    @db.VarChar(30)
+  timestamps DateTime  @db.Timestamp()
+  tasks      Task[]
+  comments   Comment[]
 }
 
 model Task {
@@ -33,6 +34,7 @@ model Task {
   status      Status    @relation(fields: [statusId], references: [id])
   statusId    Int
   timestamps  DateTime  @db.Timestamp()
+  Comment     Comment[]
 }
 
 model Column {
@@ -57,4 +59,17 @@ model Status {
   name       String @db.VarChar(255)
   color_code String @db.VarChar(9)
   Task       Task[]
+}
+
+model Comment {
+  id       Int       @id @default(autoincrement())
+  content  String    @db.Text
+  taskId   Int
+  task     Task      @relation(fields: [taskId], references: [id])
+  userId   Int
+  user     User      @relation(fields: [userId], references: [id])
+  answerId Int?
+  answer   Comment?  @relation("ParentChild", fields: [answerId], references: [id])
+  type     Boolean?
+  children Comment[] @relation("ParentChild")
 }
