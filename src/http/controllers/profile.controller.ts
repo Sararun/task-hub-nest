@@ -76,8 +76,7 @@ export class ProfileController {
     },
     description: 'Validation error',
   })
-  @Patch('set-name')
-  @HttpCode(HttpStatus.OK)
+  @Patch('')
   async setProfileData(
     @Body() setProfileDto: SetProfileDataDtoRequest,
     @Req() request: any,
@@ -103,7 +102,7 @@ export class ProfileController {
     }
   }
 
-  @Get('get')
+  @Get()
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
     status: HttpStatus.OK,

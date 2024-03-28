@@ -19,11 +19,10 @@ import { CreateTaskDtoRequest } from '../requests/tasks/createTask.dto.request';
 import { Prisma, Task, User } from '@prisma/client';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateTaskDtoRequest } from '../requests/tasks/updateTask.dto.request';
-import { ValidateBoardExistsValidator } from '../../validators/validateBoardExists.validator';
 import { ValidateColumnExistsValidator } from '../../validators/validateColumnExists.validator';
 import { ValidateStatusExistsValidator } from '../../validators/validateStatusExists.validator';
 
-@Controller('boards/:boardId/columns/:columnId/tasks/')
+@Controller('columns/:columnId/tasks/')
 @ApiTags('tasks')
 @UseGuards(AuthGuard('jwt'))
 @ApiResponse({
@@ -86,8 +85,6 @@ export class TaskController {
   })
   @Post()
   async add(
-    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
-    boardId: number,
     @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
     columnId: number,
     @Body(ValidateStatusExistsValidator) addTaskDto: CreateTaskDtoRequest,
@@ -153,8 +150,6 @@ export class TaskController {
   })
   @Delete(':taskId')
   async delete(
-    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
-    boardId: number,
     @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
     columnId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
@@ -227,8 +222,6 @@ export class TaskController {
     },
   })
   async get(
-    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
-    boardId: number,
     @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
     columnId: number,
   ) {
@@ -264,8 +257,6 @@ export class TaskController {
     },
   })
   async update(
-    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
-    boardId: number,
     @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
     columnId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
