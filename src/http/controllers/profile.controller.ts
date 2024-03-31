@@ -56,16 +56,6 @@ export class ProfileController {
     description: 'Internal server error.',
   })
   @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    schema: {
-      example: {
-        message: 'Unauthorized',
-        statusCode: HttpStatus.UNAUTHORIZED,
-      },
-    },
-    description: 'User not authorized',
-  })
-  @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     schema: {
       example: {
@@ -92,7 +82,6 @@ export class ProfileController {
       });
       if (updatedUser) {
         return {
-          statusCode: HttpStatus.OK,
           payload: { name: setProfileDto.name },
         };
       }
@@ -112,25 +101,17 @@ export class ProfileController {
           email: 'email@mail.com',
           name: 'John Doe',
         },
-        statusCode: HttpStatus.OK,
       },
     },
     description: 'Profile',
   })
-  async get(@Req() request: any): Promise<{
-    statusCode: HttpStatus;
-    payload: {
-      email: string | null | undefined;
-      name: string | null | undefined;
-    };
-  }> {
+  async get(@Req() request: any) {
     const user: User | null = await this.prisma.user.findUnique({
       where: {
         email: request.user.email,
       },
     });
     return {
-      statusCode: HttpStatus.OK,
       payload: {
         email: user?.email,
         name: user?.name,

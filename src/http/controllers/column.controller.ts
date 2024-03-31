@@ -16,9 +16,21 @@ import { AddColumnDtoRequest } from '../requests/addColumn.dto.request';
 import { Board, Column } from '@prisma/client';
 import { UpdateColumnDtoRequest } from '../requests/updateColumn.dto.request';
 import { AuthGuard } from '@nestjs/passport';
+import { BoardNotFoundException } from '../../exceptions/http/boards/board.not_found.exception';
+import { ColumnNotFoundException } from '../../exceptions/http/columns/column.not_found.exception';
 
 @Controller('boards/:boardId/columns/')
 @ApiTags('columns')
+@UseGuards(AuthGuard('jwt'))
+@ApiResponse({
+  status: HttpStatus.NOT_FOUND,
+  schema: {
+    example: {
+      message: 'Board not found',
+      statusCode: HttpStatus.NOT_FOUND,
+    },
+  },
+})
 export class ColumnController {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -26,8 +38,6 @@ export class ColumnController {
     status: HttpStatus.CREATED,
     schema: {
       example: {
-        message: 'Column was been successfully created',
-        statusCode: HttpStatus.CREATED,
         payload: {
           id: 9,
           name: 'third',
@@ -47,27 +57,18 @@ export class ColumnController {
       },
     },
   })
-  @UseGuards(AuthGuard('jwt'))
   @Post()
   async createColumn(
     @Param('boardId', ParseIntPipe) boardId: number,
     @Body() createColumnDto: AddColumnDtoRequest,
-  ): Promise<{
-    statusCode: HttpStatus;
-    message: string;
-    payload: Column | null;
-  }> {
+  ): Promise<{ payload: Column }> {
     const board: Board | null = await this.prisma.board.findUnique({
       where: {
         id: boardId,
       },
     });
     if (board == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'The board you wanted to add a column to does not exist',
-        payload: null,
-      };
+      throw new BoardNotFoundException();
     }
     const columnWithMaxNumber: { _max: { column_number: number | null } } =
       await this.prisma.column.aggregate({
@@ -95,28 +96,14 @@ export class ColumnController {
     });
 
     return {
-      statusCode: HttpStatus.CREATED,
-      message: 'Column was been successfully created',
       payload: column,
     };
   }
 
   @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    schema: {
-      example: {
-        message: 'Internal Server Error',
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      },
-    },
-    description: 'Internal server error.',
-  })
-  @ApiResponse({
     status: HttpStatus.OK,
     schema: {
       example: {
-        message: 'The column was been updated successfully',
-        statusCode: HttpStatus.OK,
         payload: {
           id: 5,
           name: 'five',
@@ -141,7 +128,7 @@ export class ColumnController {
     status: HttpStatus.NOT_FOUND,
     schema: {
       example: {
-        message: "The column what you want to update doesn't exist",
+        message: 'Column not found',
         statusCode: HttpStatus.NOT_FOUND,
       },
     },
@@ -151,18 +138,14 @@ export class ColumnController {
     @Param('boardId', ParseIntPipe) boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
     @Body() updateColumnDto: UpdateColumnDtoRequest,
-  ) {
+  ): Promise<{ payload: Column }> {
     const board: Board | null = await this.prisma.board.findUnique({
       where: {
         id: boardId,
       },
     });
     if (board == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'The board you wanted to add a column to does not exist',
-        payload: null,
-      };
+      throw new BoardNotFoundException();
     }
 
     const updatableColumn: Column | null = await this.prisma.column.findUnique({
@@ -172,11 +155,7 @@ export class ColumnController {
     });
 
     if (updatableColumn == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The column what you want to update doesn't exist",
-        payload: null,
-      };
+      throw new ColumnNotFoundException();
     }
 
     if (updateColumnDto.columnNumber != undefined) {
@@ -232,8 +211,6 @@ export class ColumnController {
           });
 
           return {
-            statusCode: HttpStatus.OK,
-            message: 'The column was been updated successfully',
             payload: result,
           };
         }
@@ -250,8 +227,6 @@ export class ColumnController {
       },
     });
     return {
-      statusCode: HttpStatus.OK,
-      message: 'The column was been updated successfully',
       payload: updatedColumn,
     };
   }
@@ -260,17 +235,8 @@ export class ColumnController {
     status: HttpStatus.NOT_FOUND,
     schema: {
       example: {
-        message: "The column what you want to delete doesn't exist",
+        message: 'Column not found',
         statusCode: HttpStatus.NOT_FOUND,
-      },
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    schema: {
-      example: {
-        message: 'Internal Server Error',
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       },
     },
   })
@@ -278,8 +244,7 @@ export class ColumnController {
     status: HttpStatus.OK,
     schema: {
       example: {
-        message: 'The column was been deleted successfully',
-        statusCode: HttpStatus.OK,
+        payload: null,
       },
     },
   })
@@ -288,8 +253,7 @@ export class ColumnController {
     @Param('boardId', ParseIntPipe) boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
   ): Promise<{
-    statusCode: HttpStatus;
-    message: string;
+    payload: null;
   }> {
     const board: Board | null = await this.prisma.board.findUnique({
       where: {
@@ -297,10 +261,7 @@ export class ColumnController {
       },
     });
     if (board == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'The board you wanted to add a column to does not exist',
-      };
+      throw new BoardNotFoundException();
     }
 
     const deletableColumn: Column | null = await this.prisma.column.findUnique({
@@ -311,10 +272,7 @@ export class ColumnController {
     });
 
     if (deletableColumn == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The column what you want to delete doesn't exist",
-      };
+      throw new ColumnNotFoundException();
     }
 
     const columnsToUpdate = await this.prisma.column.findMany({
@@ -351,8 +309,7 @@ export class ColumnController {
       });
 
       return {
-        statusCode: HttpStatus.OK,
-        message: 'The column was been deleted successfully',
+        payload: null,
       };
     }
 
@@ -364,26 +321,15 @@ export class ColumnController {
     });
 
     return {
-      statusCode: HttpStatus.OK,
-      message: 'The column was been deleted successfully',
+      payload: null,
     };
   }
 
   @Get()
   @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    schema: {
-      example: {
-        message: "The board doesn't exist",
-        statusCode: HttpStatus.NOT_FOUND,
-      },
-    },
-  })
-  @ApiResponse({
     status: HttpStatus.OK,
     schema: {
       example: {
-        statusCode: HttpStatus.OK,
         payload: [
           {
             id: 1,
@@ -401,27 +347,24 @@ export class ColumnController {
       },
     },
   })
-  async get(@Param('boardId', ParseIntPipe) boardId: number) {
+  async get(
+    @Param('boardId', ParseIntPipe) boardId: number,
+  ): Promise<{ payload: Column[] | [] }> {
     const board: Board | null = await this.prisma.board.findUnique({
       where: {
         id: boardId,
       },
     });
     if (board == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: "The board doesn't exist",
-      };
+      throw new BoardNotFoundException();
     }
-    const payload: Column[] | null = await this.prisma.column.findMany({
+    const columns: Column[] | null = await this.prisma.column.findMany({
       where: { board_id: boardId },
       orderBy: {
         column_number: 'asc',
       },
     });
-    if (payload == null) {
-      return { statusCode: HttpStatus.OK, payload: [] };
-    }
-    return { statusCode: HttpStatus.OK, payload: payload };
+
+    return { payload: columns };
   }
 }

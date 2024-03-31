@@ -55,14 +55,12 @@ import { Response } from 'express';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @HttpCode(HttpStatus.OK)
   @Post('signin')
-  @HttpCode(HttpStatus.OK)
   @ApiResponse({
     status: HttpStatus.OK,
     schema: {
       example: {
-        statusCode: HttpStatus.OK,
+        status: true,
       },
     },
     description: 'Access token was generated.',
@@ -70,24 +68,24 @@ export class AuthController {
   async signIn(
     @Body() signInDto: SigInDtoRequest,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{ statusCode: HttpStatus.OK }> {
+  ): Promise<{ status: true }> {
     const { access_token } = await this.authService.signIn(
       signInDto.email,
       signInDto.password,
     );
     await this.authService.setJwtToken(res, access_token);
 
-    return { statusCode: HttpStatus.OK };
+    return { status: true };
   }
 
   @Post('signup')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   @ApiResponse({
-    status: HttpStatus.OK,
+    status: HttpStatus.CREATED,
     description: 'Register ok and access token was generated.',
     schema: {
       example: {
-        statusCode: HttpStatus.OK,
+        status: true,
       },
     },
   })
@@ -100,7 +98,7 @@ export class AuthController {
   async signUp(
     @Body() signUpDto: SigUpDtoRequest,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{ statusCode: HttpStatus.OK }> {
+  ): Promise<{ status: true }> {
     const signUpResult: boolean = await this.authService.signUp(
       signUpDto.name,
       signUpDto.email,
@@ -113,7 +111,7 @@ export class AuthController {
       );
       await this.authService.setJwtToken(res, access_token);
 
-      return { statusCode: HttpStatus.OK };
+      return { status: true };
     }
     throw UnauthorizedException;
   }

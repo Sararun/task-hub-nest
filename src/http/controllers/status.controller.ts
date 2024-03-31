@@ -10,6 +10,7 @@ import { PrismaService } from '../../services/prisma.service';
 import { UpdateStatusDtoRequest } from '../requests/updateStatus.dto.request';
 import { Status } from '@prisma/client';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { StatusNotFoundException } from '../../exceptions/http/statusses/status.not_found.exception';
 
 @ApiTags('statuses')
 @Controller('statuses')
@@ -28,7 +29,6 @@ export class StatusController {
             color_code: 'FFFFFFFFF',
           },
         ],
-        statusCode: HttpStatus.OK,
       },
     },
   })
@@ -43,25 +43,26 @@ export class StatusController {
     },
     description: 'Validation error',
   })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    schema: {
+      example: {
+        message: 'Status not found',
+        statusCode: HttpStatus.NOT_FOUND,
+      },
+    },
+  })
   async update(
     @Param('statusId', ParseIntPipe) statusId: number,
     @Body() req: UpdateStatusDtoRequest,
-  ): Promise<{
-    statusCode: HttpStatus;
-    message: string;
-    payload: Status | null;
-  }> {
+  ): Promise<{ payload: Status }> {
     const existsStatus: Status | null = await this.prisma.status.findUnique({
       where: {
         id: statusId,
       },
     });
     if (existsStatus == null) {
-      return {
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'The status you were trying to change does not exist',
-        payload: null,
-      };
+      throw new StatusNotFoundException();
     }
     const status: Status = await this.prisma.status.update({
       where: {
@@ -73,8 +74,6 @@ export class StatusController {
       },
     });
     return {
-      statusCode: HttpStatus.CREATED,
-      message: 'The status has been successfully changed',
       payload: status,
     };
   }

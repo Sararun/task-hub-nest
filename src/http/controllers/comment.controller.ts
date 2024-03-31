@@ -51,8 +51,6 @@ export class CommentController {
     status: HttpStatus.CREATED,
     schema: {
       example: {
-        statusCode: 201,
-        message: 'Comment was been successfully created',
         payload: {
           id: 12,
           content: 'aaaaaaaac',
@@ -88,8 +86,6 @@ export class CommentController {
       });
 
       return {
-        statusCode: HttpStatus.CREATED,
-        message: 'Comment was been successfully created',
         payload: comment,
       };
     }
@@ -100,8 +96,6 @@ export class CommentController {
     status: HttpStatus.OK,
     schema: {
       example: {
-        statusCode: 200,
-        message: 'The comment was been successfully deleted',
         payload: null,
       },
     },
@@ -111,7 +105,7 @@ export class CommentController {
     @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
     @Param('commentId', ParseIntPipe, ValidateCommentExistValidator)
     commentId: number,
-  ) {
+  ): Promise<{ payload: null }> {
     await this.prisma.comment.delete({
       where: {
         id: commentId,
@@ -120,8 +114,6 @@ export class CommentController {
     });
 
     return {
-      statusCode: HttpStatus.OK,
-      message: 'The comment was been successfully deleted',
       payload: null,
     };
   }
@@ -130,8 +122,6 @@ export class CommentController {
     status: HttpStatus.OK,
     schema: {
       example: {
-        statusCode: 200,
-        message: 'Comment was been successfully updated',
         payload: {
           id: 12,
           content: 'aaaaaaaac',
@@ -160,8 +150,6 @@ export class CommentController {
       },
     });
     return {
-      statusCode: HttpStatus.OK,
-      message: 'The comment was been successfully updated',
       payload: comment,
     };
   }
@@ -170,7 +158,6 @@ export class CommentController {
     status: HttpStatus.OK,
     schema: {
       example: {
-        statusCode: 200,
         payload: [
           {
             id: 1,
@@ -199,6 +186,6 @@ export class CommentController {
     const comments = await this.prisma.comment.findMany({
       where: { taskId: taskId },
     });
-    return { statusCode: HttpStatus.OK, payload: comments };
+    return { payload: comments };
   }
 }

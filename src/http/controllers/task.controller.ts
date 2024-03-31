@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   HttpStatus,
-  InternalServerErrorException,
   Param,
   ParseIntPipe,
   Patch,
@@ -16,11 +15,12 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../services/prisma.service';
 import { CreateTaskDtoRequest } from '../requests/tasks/createTask.dto.request';
-import { Prisma, Task, User } from '@prisma/client';
+import { Task, User } from '@prisma/client';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateTaskDtoRequest } from '../requests/tasks/updateTask.dto.request';
 import { ValidateColumnExistsValidator } from '../../validators/validateColumnExists.validator';
 import { ValidateStatusExistsValidator } from '../../validators/validateStatusExists.validator';
+import { TaskNotFoundException } from '../../exceptions/http/tasks/task.not_found.exception';
 
 @Controller('columns/:columnId/tasks/')
 @ApiTags('tasks')
@@ -39,11 +39,10 @@ import { ValidateStatusExistsValidator } from '../../validators/validateStatusEx
   status: HttpStatus.NOT_FOUND,
   schema: {
     example: {
-      message: 'The board you wanted to add a column to does not exist',
+      message: 'Column not found',
       statusCode: HttpStatus.NOT_FOUND,
     },
   },
-  description: 'Task not found',
 })
 export class TaskController {
   constructor(private readonly prisma: PrismaService) {}
@@ -52,8 +51,6 @@ export class TaskController {
     status: HttpStatus.CREATED,
     schema: {
       example: {
-        message: 'Task was been successfully created',
-        statusCode: HttpStatus.CREATED,
         payload: {
           id: 11,
           images: null,
@@ -89,7 +86,7 @@ export class TaskController {
     columnId: number,
     @Body(ValidateStatusExistsValidator) addTaskDto: CreateTaskDtoRequest,
     @Req() request: any,
-  ) {
+  ): Promise<{ payload: Task }> {
     const user: User | null = await this.prisma.user.findUnique({
       where: {
         email: request.user.email,
@@ -112,41 +109,18 @@ export class TaskController {
       },
     });
     return {
-      statusCode: HttpStatus.CREATED,
-      message: 'Task was been successfully created',
       payload: task,
     };
   }
 
   @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    schema: {
-      example: {
-        message: "You tried deleting something that isn't there",
-        statusCode: HttpStatus.NOT_FOUND,
-      },
-    },
-    description: 'Task not found',
-  })
-  @ApiResponse({
     status: HttpStatus.OK,
     schema: {
       example: {
-        message: 'Task was been deleted successfully',
-        statusCode: HttpStatus.OK,
+        payload: null,
       },
     },
     description: 'Task was been deleted successfully',
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    schema: {
-      example: {
-        message: 'Internal Server Error',
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      },
-    },
-    description: 'Internal server error.',
   })
   @Delete(':taskId')
   async delete(
@@ -154,7 +128,7 @@ export class TaskController {
     columnId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
     @Req() request: any,
-  ): Promise<{ message: string; statusCode: HttpStatus }> {
+  ) {
     const user: User | null = await this.prisma.user.findUnique({
       where: {
         email: request.user.email,
@@ -163,28 +137,24 @@ export class TaskController {
     if (!user) {
       throw UnauthorizedException;
     }
-
-    try {
-      await this.prisma.task.delete({
-        where: {
-          owner_id: user.id,
-          column_id: columnId,
-          id: taskId,
-        },
-      });
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        return {
-          message: "You tried deleting something that isn't there",
-          statusCode: HttpStatus.NOT_FOUND,
-        };
-      }
-      throw InternalServerErrorException;
+    const task = this.prisma.task.findUnique({
+      where: {
+        id: taskId,
+      },
+    });
+    if (task == null) {
+      throw new TaskNotFoundException();
     }
+    await this.prisma.task.delete({
+      where: {
+        owner_id: user.id,
+        column_id: columnId,
+        id: taskId,
+      },
+    });
 
     return {
-      message: 'Task was been deleted successfully',
-      statusCode: HttpStatus.OK,
+      payload: null,
     };
   }
 
@@ -217,21 +187,20 @@ export class TaskController {
             timestamps: '2024-02-26T14:41:47.734Z',
           },
         ],
-        statusCode: HttpStatus.OK,
       },
     },
   })
   async get(
     @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
     columnId: number,
-  ) {
+  ): Promise<{ payload: Task[] | [] }> {
     const task: Task[] | [] = await this.prisma.task.findMany({
       where: {
         column_id: columnId,
       },
     });
 
-    return { statusCode: HttpStatus.OK, payload: task };
+    return { payload: task };
   }
 
   @Patch(':taskId')
@@ -252,7 +221,6 @@ export class TaskController {
             timestamps: '2024-02-26T14:41:42.307Z',
           },
         ],
-        statusCode: HttpStatus.OK,
       },
     },
   })
@@ -261,7 +229,7 @@ export class TaskController {
     columnId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
     @Body(ValidateStatusExistsValidator) updateTaskDto: UpdateTaskDtoRequest,
-  ) {
+  ): Promise<{ payload: Task }> {
     const task = await this.prisma.task.update({
       where: {
         id: taskId,
@@ -275,6 +243,6 @@ export class TaskController {
         statusId: updateTaskDto?.statusId,
       },
     });
-    return { statusCode: HttpStatus.OK, payload: task };
+    return { payload: task };
   }
 }
