@@ -57,25 +57,6 @@ export class ProfileController {
     description: 'User successfully updated.',
   })
   @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found.',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-      },
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    schema: {
-      example: {
-        message: 'Internal Server Error',
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      },
-    },
-    description: 'Internal server error.',
-  })
-  @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     schema: {
       example: {
