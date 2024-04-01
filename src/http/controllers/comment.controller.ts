@@ -19,6 +19,7 @@ import { ValidateTaskExistsValidator } from '../../validators/validateTaskExists
 import { ValidateCommentExistValidator } from '../../validators/validateCommentExist.validator';
 import { UpdateCommentDtoRequest } from '../requests/comments/updateComment.dto.request';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Comment } from '@prisma/client';
 
 @ApiTags('comments')
 @ApiResponse({
@@ -67,7 +68,7 @@ export class CommentController {
     @Body() createColumnDto: CreateCommentDtoRequest,
     @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
     @Req() request: any,
-  ) {
+  ): Promise<{ payload: Comment }> {
     const user = await this.prisma.user.findUnique({
       where: {
         email: request.user.email,
@@ -120,7 +121,7 @@ export class CommentController {
   @Get()
   async get(
     @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
-  ) {
+  ): Promise<{ payload: Comment[] | [] }> {
     const comments = await this.prisma.comment.findMany({
       where: { taskId: taskId },
     });
@@ -148,7 +149,7 @@ export class CommentController {
     @Param('commentId', ParseIntPipe, ValidateCommentExistValidator)
     commentId: number,
     @Body() updateCommentDto: UpdateCommentDtoRequest,
-  ) {
+  ): Promise<{ payload: Comment }> {
     const comment = await this.prisma.comment.update({
       where: {
         id: commentId,

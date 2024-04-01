@@ -216,7 +216,7 @@ export class TaskController {
     columnId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
     @Req() request: any,
-  ) {
+  ): Promise<{ payload: null }> {
     const user: User | null = await this.prisma.user.findUnique({
       where: {
         email: request.user.email,
