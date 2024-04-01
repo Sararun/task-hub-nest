@@ -34,7 +34,7 @@ export class BoardController {
     },
   })
   @ApiResponse({
-    status: HttpStatus.CREATED,
+    status: HttpStatus.BAD_REQUEST,
     schema: {
       example: {
         message: [
