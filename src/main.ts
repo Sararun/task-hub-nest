@@ -11,7 +11,6 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('task-hub-api')
     .setVersion('1.0')
-    .addTag('task-hub-api')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
