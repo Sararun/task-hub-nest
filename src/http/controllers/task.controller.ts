@@ -19,7 +19,7 @@ import { Task, User } from '@prisma/client';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateTaskDtoRequest } from '../requests/tasks/updateTask.dto.request';
 import { ValidateColumnExistsValidator } from '../../validators/validateColumnExists.validator';
-import { ValidateStatusExistsValidator } from '../../validators/validateStatusExists.validator';
+import { TransformStatusExistsValidator } from '../../validators/transformStatusExists.validator';
 import { TaskNotFoundException } from '../../exceptions/http/tasks/task.not_found.exception';
 
 @Controller('columns/:columnId/tasks/')
@@ -84,7 +84,7 @@ export class TaskController {
   async add(
     @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
     columnId: number,
-    @Body(ValidateStatusExistsValidator) addTaskDto: CreateTaskDtoRequest,
+    @Body(TransformStatusExistsValidator) addTaskDto: CreateTaskDtoRequest,
     @Req() request: any,
   ): Promise<{ payload: Task }> {
     const user: User | null = await this.prisma.user.findUnique({
@@ -228,7 +228,7 @@ export class TaskController {
     @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
     columnId: number,
     @Param('taskId', ParseIntPipe) taskId: number,
-    @Body(ValidateStatusExistsValidator) updateTaskDto: UpdateTaskDtoRequest,
+    @Body(TransformStatusExistsValidator) updateTaskDto: UpdateTaskDtoRequest,
   ): Promise<{ payload: Task }> {
     const task = await this.prisma.task.update({
       where: {

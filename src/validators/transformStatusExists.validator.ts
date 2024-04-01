@@ -5,7 +5,7 @@ import { PrismaService } from '../services/prisma.service';
 import { CreateTaskDtoRequest } from '../http/requests/tasks/createTask.dto.request';
 
 @Injectable()
-export class ValidateStatusExistsValidator implements PipeTransform {
+export class TransformStatusExistsValidator implements PipeTransform {
   constructor(private readonly prisma: PrismaService) {}
 
   async transform(addTaskDto: CreateTaskDtoRequest) {
