@@ -23,29 +23,6 @@ export class BoardController {
   constructor(private readonly prisma: PrismaService) {}
 
   @ApiResponse({
-    status: HttpStatus.OK,
-    schema: {
-      example: {
-        payload: [
-          {
-            id: 1,
-            name: 'first',
-          },
-          {
-            id: 2,
-            name: 'second',
-          },
-        ],
-      },
-    },
-  })
-  @Get()
-  async get(): Promise<{ payload: Board[] | [] }> {
-    const boards: Board[] | [] = await this.prisma.board.findMany();
-    return { payload: boards };
-  }
-
-  @ApiResponse({
     status: HttpStatus.CREATED,
     schema: {
       example: {
@@ -82,6 +59,29 @@ export class BoardController {
     return {
       payload: board,
     };
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        payload: [
+          {
+            id: 1,
+            name: 'first',
+          },
+          {
+            id: 2,
+            name: 'second',
+          },
+        ],
+      },
+    },
+  })
+  @Get()
+  async get(): Promise<{ payload: Board[] | [] }> {
+    const boards: Board[] | [] = await this.prisma.board.findMany();
+    return { payload: boards };
   }
 
   @ApiResponse({

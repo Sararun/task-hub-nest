@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
   HttpStatus,
   InternalServerErrorException,
   Patch,
@@ -20,6 +19,33 @@ import { User } from '@prisma/client';
 @UseGuards(AuthGuard('jwt'))
 export class ProfileController {
   constructor(private prisma: PrismaService) {}
+
+  @Get()
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        payload: {
+          email: 'email@mail.com',
+          name: 'John Doe',
+        },
+      },
+    },
+    description: 'Profile',
+  })
+  async get(@Req() request: any) {
+    const user: User | null = await this.prisma.user.findUnique({
+      where: {
+        email: request.user.email,
+      },
+    });
+    return {
+      payload: {
+        email: user?.email,
+        name: user?.name,
+      },
+    };
+  }
 
   @ApiResponse({
     status: HttpStatus.OK,
@@ -61,7 +87,7 @@ export class ProfileController {
     description: 'Validation error',
   })
   @Patch('')
-  async setProfileData(
+  async update(
     @Body() setProfileDto: SetProfileDataDtoRequest,
     @Req() request: any,
   ) {
@@ -83,33 +109,5 @@ export class ProfileController {
     } catch (error) {
       throw new InternalServerErrorException();
     }
-  }
-
-  @Get()
-  @HttpCode(HttpStatus.OK)
-  @ApiResponse({
-    status: HttpStatus.OK,
-    schema: {
-      example: {
-        payload: {
-          email: 'email@mail.com',
-          name: 'John Doe',
-        },
-      },
-    },
-    description: 'Profile',
-  })
-  async get(@Req() request: any) {
-    const user: User | null = await this.prisma.user.findUnique({
-      where: {
-        email: request.user.email,
-      },
-    });
-    return {
-      payload: {
-        email: user?.email,
-        name: user?.name,
-      },
-    };
   }
 }

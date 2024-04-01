@@ -96,26 +96,35 @@ export class CommentController {
     status: HttpStatus.OK,
     schema: {
       example: {
-        payload: null,
+        payload: [
+          {
+            id: 1,
+            content: '0000000000000000',
+            taskId: 2,
+            userId: 1,
+            answerId: null,
+            type: null,
+          },
+          {
+            id: 2,
+            content: '111111111111',
+            taskId: 2,
+            userId: 1,
+            answerId: null,
+            type: null,
+          },
+        ],
       },
     },
   })
-  @Delete(':commentId')
-  async delete(
+  @Get()
+  async get(
     @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
-    @Param('commentId', ParseIntPipe, ValidateCommentExistValidator)
-    commentId: number,
-  ): Promise<{ payload: null }> {
-    await this.prisma.comment.delete({
-      where: {
-        id: commentId,
-        taskId: taskId,
-      },
+  ) {
+    const comments = await this.prisma.comment.findMany({
+      where: { taskId: taskId },
     });
-
-    return {
-      payload: null,
-    };
+    return { payload: comments };
   }
 
   @ApiResponse({
@@ -158,34 +167,25 @@ export class CommentController {
     status: HttpStatus.OK,
     schema: {
       example: {
-        payload: [
-          {
-            id: 1,
-            content: '0000000000000000',
-            taskId: 2,
-            userId: 1,
-            answerId: null,
-            type: null,
-          },
-          {
-            id: 2,
-            content: '111111111111',
-            taskId: 2,
-            userId: 1,
-            answerId: null,
-            type: null,
-          },
-        ],
+        payload: null,
       },
     },
   })
-  @Get()
-  async get(
+  @Delete(':commentId')
+  async delete(
     @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
-  ) {
-    const comments = await this.prisma.comment.findMany({
-      where: { taskId: taskId },
+    @Param('commentId', ParseIntPipe, ValidateCommentExistValidator)
+    commentId: number,
+  ): Promise<{ payload: null }> {
+    await this.prisma.comment.delete({
+      where: {
+        id: commentId,
+        taskId: taskId,
+      },
     });
-    return { payload: comments };
+
+    return {
+      payload: null,
+    };
   }
 }

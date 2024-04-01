@@ -58,7 +58,7 @@ export class ColumnController {
     },
   })
   @Post()
-  async createColumn(
+  async create(
     @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
     boardId: number,
     @Body() createColumnDto: AddColumnDtoRequest,
@@ -91,6 +91,42 @@ export class ColumnController {
     return {
       payload: column,
     };
+  }
+
+  @Get()
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        payload: [
+          {
+            id: 1,
+            name: 'first',
+            column_number: 0,
+            board_id: 1,
+          },
+          {
+            id: 2,
+            name: 'second',
+            column_number: 1,
+            board_id: 1,
+          },
+        ],
+      },
+    },
+  })
+  async get(
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+  ): Promise<{ payload: Column[] | [] }> {
+    const columns: Column[] | null = await this.prisma.column.findMany({
+      where: { board_id: boardId },
+      orderBy: {
+        column_number: 'asc',
+      },
+    });
+
+    return { payload: columns };
   }
 
   @ApiResponse({
@@ -127,7 +163,7 @@ export class ColumnController {
     },
   })
   @Patch(':columnId')
-  async updateColumns(
+  async update(
     @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
     boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
@@ -300,41 +336,5 @@ export class ColumnController {
     return {
       payload: null,
     };
-  }
-
-  @Get()
-  @ApiResponse({
-    status: HttpStatus.OK,
-    schema: {
-      example: {
-        payload: [
-          {
-            id: 1,
-            name: 'first',
-            column_number: 0,
-            board_id: 1,
-          },
-          {
-            id: 2,
-            name: 'second',
-            column_number: 1,
-            board_id: 1,
-          },
-        ],
-      },
-    },
-  })
-  async get(
-    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
-    boardId: number,
-  ): Promise<{ payload: Column[] | [] }> {
-    const columns: Column[] | null = await this.prisma.column.findMany({
-      where: { board_id: boardId },
-      orderBy: {
-        column_number: 'asc',
-      },
-    });
-
-    return { payload: columns };
   }
 }

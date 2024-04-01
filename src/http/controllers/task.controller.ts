@@ -17,10 +17,10 @@ import { PrismaService } from '../../services/prisma.service';
 import { CreateTaskDtoRequest } from '../requests/tasks/createTask.dto.request';
 import { Task, User } from '@prisma/client';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UpdateTaskDtoRequest } from '../requests/tasks/updateTask.dto.request';
 import { ValidateColumnExistsValidator } from '../../validators/validateColumnExists.validator';
 import { TransformStatusExistsValidator } from '../../validators/transformStatusExists.validator';
 import { TaskNotFoundException } from '../../exceptions/http/tasks/task.not_found.exception';
+import { UpdateTaskDtoRequest } from '../requests/tasks/updateTask.dto.request';
 
 @Controller('columns/:columnId/tasks/')
 @ApiTags('tasks')
@@ -81,7 +81,7 @@ export class TaskController {
     description: 'Validation error',
   })
   @Post()
-  async add(
+  async create(
     @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
     columnId: number,
     @Body(TransformStatusExistsValidator) addTaskDto: CreateTaskDtoRequest,
@@ -110,51 +110,6 @@ export class TaskController {
     });
     return {
       payload: task,
-    };
-  }
-
-  @ApiResponse({
-    status: HttpStatus.OK,
-    schema: {
-      example: {
-        payload: null,
-      },
-    },
-    description: 'Task was been deleted successfully',
-  })
-  @Delete(':taskId')
-  async delete(
-    @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
-    columnId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
-    @Req() request: any,
-  ) {
-    const user: User | null = await this.prisma.user.findUnique({
-      where: {
-        email: request.user.email,
-      },
-    });
-    if (!user) {
-      throw UnauthorizedException;
-    }
-    const task = this.prisma.task.findUnique({
-      where: {
-        id: taskId,
-      },
-    });
-    if (task == null) {
-      throw new TaskNotFoundException();
-    }
-    await this.prisma.task.delete({
-      where: {
-        owner_id: user.id,
-        column_id: columnId,
-        id: taskId,
-      },
-    });
-
-    return {
-      payload: null,
     };
   }
 
@@ -244,5 +199,50 @@ export class TaskController {
       },
     });
     return { payload: task };
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        payload: null,
+      },
+    },
+    description: 'Task was been deleted successfully',
+  })
+  @Delete(':taskId')
+  async delete(
+    @Param('columnId', ParseIntPipe, ValidateColumnExistsValidator)
+    columnId: number,
+    @Param('taskId', ParseIntPipe) taskId: number,
+    @Req() request: any,
+  ) {
+    const user: User | null = await this.prisma.user.findUnique({
+      where: {
+        email: request.user.email,
+      },
+    });
+    if (!user) {
+      throw UnauthorizedException;
+    }
+    const task = this.prisma.task.findUnique({
+      where: {
+        id: taskId,
+      },
+    });
+    if (task == null) {
+      throw new TaskNotFoundException();
+    }
+    await this.prisma.task.delete({
+      where: {
+        owner_id: user.id,
+        column_id: columnId,
+        id: taskId,
+      },
+    });
+
+    return {
+      payload: null,
+    };
   }
 }
