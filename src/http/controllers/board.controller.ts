@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -82,6 +83,43 @@ export class BoardController {
   async get(): Promise<{ payload: Board[] | [] }> {
     const boards: Board[] | [] = await this.prisma.board.findMany();
     return { payload: boards };
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        payload: {
+          id: 1,
+          name: 'first',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    schema: {
+      example: {
+        message: 'Board not found',
+        statusCode: HttpStatus.NOT_FOUND,
+      },
+    },
+  })
+  @Patch(':boardId')
+  async update(
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+    @Body() changeBoardDto: AddBoardDtoRequest,
+  ): Promise<{ payload: Board }> {
+    const board = await this.prisma.board.update({
+      data: {
+        name: changeBoardDto.name,
+      },
+      where: {
+        id: boardId,
+      },
+    });
+    return { payload: board };
   }
 
   @ApiResponse({
