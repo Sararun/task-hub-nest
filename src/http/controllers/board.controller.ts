@@ -14,7 +14,7 @@ import { AddBoardDtoRequest } from '../requests/addBoard.dto.request';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Board } from '@prisma/client';
-import { BoardNotFoundException } from '../../exceptions/http/boards/board.not_found.exception';
+import { ValidateBoardExistsValidator } from '../../validators/validateBoardExists.validator';
 
 @Controller('boards')
 @ApiTags('boards')
@@ -104,18 +104,9 @@ export class BoardController {
   //TODO::сделать каскадное удаление для некоторых таблиц
   @Delete(':boardId')
   async delete(
-    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
   ): Promise<{ payload: null }> {
-    const board = await this.prisma.board.findUnique({
-      where: {
-        id: boardId,
-      },
-    });
-
-    if (board == null) {
-      throw new BoardNotFoundException();
-    }
-
     await this.prisma.board.delete({ where: { id: boardId } });
 
     return {
