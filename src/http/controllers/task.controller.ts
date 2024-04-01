@@ -61,6 +61,7 @@ export class TaskController {
           column_id: 5,
           statusId: 1,
           timestamps: '2024-03-04T14:49:39.907Z',
+          recepient_id: 1,
         },
       },
     },
@@ -105,6 +106,7 @@ export class TaskController {
         owner_id: user.id,
         column_id: columnId,
         statusId: addTaskDto.statusId ?? 1,
+        recepient_id: addTaskDto.recepientId ?? null,
         timestamps: new Date(),
       },
     });
