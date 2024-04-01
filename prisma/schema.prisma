@@ -65,7 +65,7 @@ model Comment {
   id       Int       @id @default(autoincrement())
   content  String    @db.Text
   taskId   Int
-  task     Task      @relation(fields: [taskId], references: [id])
+  task     Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
   userId   Int
   user     User      @relation(fields: [userId], references: [id])
   answerId Int?
