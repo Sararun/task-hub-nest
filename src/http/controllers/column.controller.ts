@@ -13,11 +13,11 @@ import {
 import { PrismaService } from '../../services/prisma.service';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AddColumnDtoRequest } from '../requests/addColumn.dto.request';
-import { Board, Column } from '@prisma/client';
+import { Column } from '@prisma/client';
 import { UpdateColumnDtoRequest } from '../requests/updateColumn.dto.request';
 import { AuthGuard } from '@nestjs/passport';
-import { BoardNotFoundException } from '../../exceptions/http/boards/board.not_found.exception';
 import { ColumnNotFoundException } from '../../exceptions/http/columns/column.not_found.exception';
+import { ValidateBoardExistsValidator } from '../../validators/validateBoardExists.validator';
 
 @Controller('boards/:boardId/columns/')
 @ApiTags('columns')
@@ -59,17 +59,10 @@ export class ColumnController {
   })
   @Post()
   async createColumn(
-    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
     @Body() createColumnDto: AddColumnDtoRequest,
   ): Promise<{ payload: Column }> {
-    const board: Board | null = await this.prisma.board.findUnique({
-      where: {
-        id: boardId,
-      },
-    });
-    if (board == null) {
-      throw new BoardNotFoundException();
-    }
     const columnWithMaxNumber: { _max: { column_number: number | null } } =
       await this.prisma.column.aggregate({
         where: {
@@ -135,19 +128,11 @@ export class ColumnController {
   })
   @Patch(':columnId')
   async updateColumns(
-    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
     @Body() updateColumnDto: UpdateColumnDtoRequest,
   ): Promise<{ payload: Column }> {
-    const board: Board | null = await this.prisma.board.findUnique({
-      where: {
-        id: boardId,
-      },
-    });
-    if (board == null) {
-      throw new BoardNotFoundException();
-    }
-
     const updatableColumn: Column | null = await this.prisma.column.findUnique({
       where: {
         id: columnId,
@@ -250,20 +235,12 @@ export class ColumnController {
   })
   @Delete(':columnId')
   async delete(
-    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
     @Param('columnId', ParseIntPipe) columnId: number,
   ): Promise<{
     payload: null;
   }> {
-    const board: Board | null = await this.prisma.board.findUnique({
-      where: {
-        id: boardId,
-      },
-    });
-    if (board == null) {
-      throw new BoardNotFoundException();
-    }
-
     const deletableColumn: Column | null = await this.prisma.column.findUnique({
       where: {
         id: columnId,
@@ -348,16 +325,9 @@ export class ColumnController {
     },
   })
   async get(
-    @Param('boardId', ParseIntPipe) boardId: number,
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
   ): Promise<{ payload: Column[] | [] }> {
-    const board: Board | null = await this.prisma.board.findUnique({
-      where: {
-        id: boardId,
-      },
-    });
-    if (board == null) {
-      throw new BoardNotFoundException();
-    }
     const columns: Column[] | null = await this.prisma.column.findMany({
       where: { board_id: boardId },
       orderBy: {
