@@ -10,23 +10,11 @@ import {
 import { AuthService } from '../../services/auth/auth.service';
 import { SigInDtoRequest } from '../requests/sigIn.dto.request';
 import { SigUpDtoRequest } from '../requests/signUp.dto.request';
-import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
 @Controller('auth')
 @ApiTags('auth')
-@ApiParam({
-  name: 'email',
-  required: true,
-  description: 'The email of user',
-  example: 'email@mail.com',
-})
-@ApiParam({
-  name: 'password',
-  required: true,
-  description: 'The password of user',
-  example: 'password',
-})
 @ApiResponse({
   status: HttpStatus.BAD_REQUEST,
   schema: {
@@ -56,6 +44,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('signin')
+  @HttpCode(HttpStatus.OK)
   @ApiResponse({
     status: HttpStatus.OK,
     schema: {
@@ -88,12 +77,6 @@ export class AuthController {
         status: true,
       },
     },
-  })
-  @ApiParam({
-    name: 'name',
-    required: true,
-    description: 'The name of user',
-    example: 'John Doe',
   })
   async signUp(
     @Body() signUpDto: SigUpDtoRequest,

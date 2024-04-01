@@ -12,7 +12,7 @@ import {
 import { SetProfileDataDtoRequest } from '../requests/setProfileData.dto.request';
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../services/prisma.service';
-import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 
 @Controller('profile')
@@ -21,12 +21,6 @@ import { User } from '@prisma/client';
 export class ProfileController {
   constructor(private prisma: PrismaService) {}
 
-  @ApiParam({
-    name: 'name',
-    description: 'The name of user',
-    example: 'John Doe',
-    required: true,
-  })
   @ApiResponse({
     status: HttpStatus.OK,
     schema: {
