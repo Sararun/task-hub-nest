@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException, PipeTransform } from '@nestjs/common';
+import { Injectable, PipeTransform } from '@nestjs/common';
 import { PrismaService } from '../services/prisma.service';
+import { ColumnNotFoundException } from '../exceptions/http/columns/column.not_found.exception';
 
 @Injectable()
 export class ValidateColumnExistsValidator implements PipeTransform {
@@ -13,7 +14,7 @@ export class ValidateColumnExistsValidator implements PipeTransform {
     });
 
     if (!column) {
-      throw new NotFoundException(`The column what you wanted doesn't exist`);
+      throw new ColumnNotFoundException();
     }
 
     return columnId;

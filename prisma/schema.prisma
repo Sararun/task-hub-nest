@@ -12,29 +12,32 @@ datasource db {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  name       String    @db.VarChar(255)
-  email      String    @unique @db.VarChar(255)
-  password   String    @db.VarChar(30)
-  timestamps DateTime  @db.Timestamp()
-  tasks      Task[]
-  comments   Comment[]
+  id            Int       @id @default(autoincrement())
+  name          String    @db.VarChar(255)
+  email         String    @unique @db.VarChar(255)
+  password      String    @db.VarChar(30)
+  timestamps    DateTime  @db.Timestamp()
+  comments      Comment[]
+  tasksOwned    Task[]    @relation("tasksOwned")
+  tasksAssigned Task[]    @relation("tasksAssigned")
 }
 
 model Task {
-  id          Int       @id @default(autoincrement())
-  images      Json?     @db.JsonB
-  name        String    @db.VarChar(255)
-  description String?   @db.Text
-  deadline    DateTime?
-  owner_id    Int
-  owner       User      @relation(fields: [owner_id], references: [id])
-  column      Column    @relation(fields: [column_id], references: [id], onDelete: Cascade)
-  column_id   Int
-  status      Status    @relation(fields: [statusId], references: [id])
-  statusId    Int
-  timestamps  DateTime  @db.Timestamp()
-  Comment     Comment[]
+  id           Int       @id @default(autoincrement())
+  images       Json?     @db.JsonB
+  name         String    @db.VarChar(255)
+  description  String?   @db.Text
+  deadline     DateTime?
+  owner_id     Int
+  owner        User      @relation(name: "tasksOwned", fields: [owner_id], references: [id])
+  recepient_id Int?
+  recepient    User?     @relation(name: "tasksAssigned", fields: [recepient_id], references: [id])
+  column       Column    @relation(fields: [column_id], references: [id], onDelete: Cascade)
+  column_id    Int
+  status       Status    @relation(fields: [statusId], references: [id])
+  statusId     Int
+  timestamps   DateTime  @db.Timestamp()
+  Comment      Comment[]
 }
 
 model Column {
@@ -65,7 +68,7 @@ model Comment {
   id       Int       @id @default(autoincrement())
   content  String    @db.Text
   taskId   Int
-  task     Task      @relation(fields: [taskId], references: [id])
+  task     Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
   userId   Int
   user     User      @relation(fields: [userId], references: [id])
   answerId Int?

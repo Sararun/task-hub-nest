@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -14,12 +15,52 @@ import { AddBoardDtoRequest } from '../requests/addBoard.dto.request';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { Board } from '@prisma/client';
+import { ValidateBoardExistsValidator } from '../../validators/validateBoardExists.validator';
 
 @Controller('boards')
 @ApiTags('boards')
 @UseGuards(AuthGuard('jwt'))
 export class BoardController {
   constructor(private readonly prisma: PrismaService) {}
+
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    schema: {
+      example: {
+        payload: {
+          id: 7,
+          name: 'third',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    schema: {
+      example: {
+        message: [
+          'name must be shorter than or equal to 255 characters',
+          'name must be a string',
+        ],
+        error: 'Bad Request',
+        statusCode: 400,
+      },
+    },
+  })
+  @Post()
+  async create(
+    @Body() addBoardDto: AddBoardDtoRequest,
+  ): Promise<{ payload: Board }> {
+    const board: Board = await this.prisma.board.create({
+      data: {
+        name: addBoardDto.name,
+      },
+    });
+
+    return {
+      payload: board,
+    };
+  }
 
   @ApiResponse({
     status: HttpStatus.OK,
@@ -35,66 +76,79 @@ export class BoardController {
             name: 'second',
           },
         ],
-        statusCode: HttpStatus.OK,
       },
     },
   })
   @Get()
-  async get() {
-    const boards: Board[] = await this.prisma.board.findMany();
-    return { statusCode: HttpStatus.OK, payload: boards };
+  async get(): Promise<{ payload: Board[] | [] }> {
+    const boards: Board[] | [] = await this.prisma.board.findMany();
+    return { payload: boards };
   }
 
   @ApiResponse({
     status: HttpStatus.OK,
     schema: {
       example: {
-        message: 'The board was been successfully created',
-        statusCode: HttpStatus.OK,
         payload: {
-          id: 7,
-          name: 'third',
+          id: 1,
+          name: 'first',
         },
       },
     },
   })
-  @Post()
-  async create(@Body() addBoardDto: AddBoardDtoRequest): Promise<{
-    statusCode: HttpStatus.OK;
-    message: 'The board was been successfully created';
-    payload: Board;
-  }> {
-    const board: Board = await this.prisma.board.create({
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    schema: {
+      example: {
+        message: 'Board not found',
+        statusCode: HttpStatus.NOT_FOUND,
+      },
+    },
+  })
+  @Patch(':boardId')
+  async update(
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+    @Body() changeBoardDto: AddBoardDtoRequest,
+  ): Promise<{ payload: Board }> {
+    const board = await this.prisma.board.update({
       data: {
-        name: addBoardDto.name,
+        name: changeBoardDto.name,
+      },
+      where: {
+        id: boardId,
       },
     });
-
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'The board was been successfully created',
-      payload: board,
-    };
+    return { payload: board };
   }
 
   @ApiResponse({
     status: HttpStatus.OK,
     schema: {
       example: {
-        message: 'The board successfully deleted',
-        statusCode: HttpStatus.OK,
+        payload: null,
       },
     },
   })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    schema: {
+      example: {
+        message: 'Board not found',
+        statusCode: HttpStatus.NOT_FOUND,
+      },
+    },
+  })
+  //TODO::сделать каскадное удаление для некоторых таблиц
   @Delete(':boardId')
-  async delete(@Param('boardId', ParseIntPipe) boardId: number): Promise<{
-    statusCode: HttpStatus.OK;
-    message: 'The board successfully deleted';
-  }> {
+  async delete(
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+  ): Promise<{ payload: null }> {
     await this.prisma.board.delete({ where: { id: boardId } });
+
     return {
-      statusCode: HttpStatus.OK,
-      message: 'The board successfully deleted',
+      payload: null,
     };
   }
 }

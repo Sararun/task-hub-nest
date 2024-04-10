@@ -10,6 +10,7 @@ import {
 import { Type } from 'class-transformer';
 import { IsDateBeforeNowValidator } from '../../../validators/isDateBeforeNow.validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserExistsValidator } from '../../../validators/userExists.validator';
 
 export class CreateTaskDtoRequest {
   @IsOptional()
@@ -53,4 +54,14 @@ export class CreateTaskDtoRequest {
     required: false,
   })
   statusId: number | undefined;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiProperty({
+    description: 'Id of user which assigned to task',
+    example: '1',
+    required: false,
+  })
+  @Validate(UserExistsValidator)
+  recepientId: number | undefined;
 }

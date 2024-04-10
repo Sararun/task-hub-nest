@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
   HttpStatus,
   InternalServerErrorException,
   Patch,
@@ -12,7 +11,7 @@ import {
 import { SetProfileDataDtoRequest } from '../requests/setProfileData.dto.request';
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../services/prisma.service';
-import { ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 
 @Controller('profile')
@@ -21,12 +20,33 @@ import { User } from '@prisma/client';
 export class ProfileController {
   constructor(private prisma: PrismaService) {}
 
-  @ApiParam({
-    name: 'name',
-    description: 'The name of user',
-    example: 'John Doe',
-    required: true,
+  @Get()
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        payload: {
+          email: 'email@mail.com',
+          name: 'John Doe',
+        },
+      },
+    },
+    description: 'Profile',
   })
+  async get(@Req() request: any) {
+    const user: User | null = await this.prisma.user.findUnique({
+      where: {
+        email: request.user.email,
+      },
+    });
+    return {
+      payload: {
+        email: user?.email,
+        name: user?.name,
+      },
+    };
+  }
+
   @ApiResponse({
     status: HttpStatus.OK,
     schema: {
@@ -35,35 +55,6 @@ export class ProfileController {
       },
     },
     description: 'User successfully updated.',
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'User not found.',
-    schema: {
-      example: {
-        statusCode: HttpStatus.NOT_FOUND,
-      },
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
-    schema: {
-      example: {
-        message: 'Internal Server Error',
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      },
-    },
-    description: 'Internal server error.',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    schema: {
-      example: {
-        message: 'Unauthorized',
-        statusCode: HttpStatus.UNAUTHORIZED,
-      },
-    },
-    description: 'User not authorized',
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -76,9 +67,8 @@ export class ProfileController {
     },
     description: 'Validation error',
   })
-  @Patch('set-name')
-  @HttpCode(HttpStatus.OK)
-  async setProfileData(
+  @Patch('')
+  async update(
     @Body() setProfileDto: SetProfileDataDtoRequest,
     @Req() request: any,
   ) {
@@ -93,7 +83,6 @@ export class ProfileController {
       });
       if (updatedUser) {
         return {
-          statusCode: HttpStatus.OK,
           payload: { name: setProfileDto.name },
         };
       }
@@ -101,41 +90,5 @@ export class ProfileController {
     } catch (error) {
       throw new InternalServerErrorException();
     }
-  }
-
-  @Get('get')
-  @HttpCode(HttpStatus.OK)
-  @ApiResponse({
-    status: HttpStatus.OK,
-    schema: {
-      example: {
-        payload: {
-          email: 'email@mail.com',
-          name: 'John Doe',
-        },
-        statusCode: HttpStatus.OK,
-      },
-    },
-    description: 'Profile',
-  })
-  async get(@Req() request: any): Promise<{
-    statusCode: HttpStatus;
-    payload: {
-      email: string | null | undefined;
-      name: string | null | undefined;
-    };
-  }> {
-    const user: User | null = await this.prisma.user.findUnique({
-      where: {
-        email: request.user.email,
-      },
-    });
-    return {
-      statusCode: HttpStatus.OK,
-      payload: {
-        email: user?.email,
-        name: user?.name,
-      },
-    };
   }
 }

@@ -19,6 +19,7 @@ import { ValidateTaskExistsValidator } from '../../validators/validateTaskExists
 import { ValidateCommentExistValidator } from '../../validators/validateCommentExist.validator';
 import { UpdateCommentDtoRequest } from '../requests/comments/updateComment.dto.request';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Comment } from '@prisma/client';
 
 @ApiTags('comments')
 @ApiResponse({
@@ -51,8 +52,6 @@ export class CommentController {
     status: HttpStatus.CREATED,
     schema: {
       example: {
-        statusCode: 201,
-        message: 'Comment was been successfully created',
         payload: {
           id: 12,
           content: 'aaaaaaaac',
@@ -69,7 +68,7 @@ export class CommentController {
     @Body() createColumnDto: CreateCommentDtoRequest,
     @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
     @Req() request: any,
-  ) {
+  ): Promise<{ payload: Comment }> {
     const user = await this.prisma.user.findUnique({
       where: {
         email: request.user.email,
@@ -88,8 +87,6 @@ export class CommentController {
       });
 
       return {
-        statusCode: HttpStatus.CREATED,
-        message: 'Comment was been successfully created',
         payload: comment,
       };
     }
@@ -100,77 +97,6 @@ export class CommentController {
     status: HttpStatus.OK,
     schema: {
       example: {
-        statusCode: 200,
-        message: 'The comment was been successfully deleted',
-        payload: null,
-      },
-    },
-  })
-  @Delete(':commentId')
-  async delete(
-    @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
-    @Param('commentId', ParseIntPipe, ValidateCommentExistValidator)
-    commentId: number,
-  ) {
-    await this.prisma.comment.delete({
-      where: {
-        id: commentId,
-        taskId: taskId,
-      },
-    });
-
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'The comment was been successfully deleted',
-      payload: null,
-    };
-  }
-
-  @ApiResponse({
-    status: HttpStatus.OK,
-    schema: {
-      example: {
-        statusCode: 200,
-        message: 'Comment was been successfully updated',
-        payload: {
-          id: 12,
-          content: 'aaaaaaaac',
-          taskId: 2,
-          userId: 1,
-          answerId: 1,
-          type: true,
-        },
-      },
-    },
-  })
-  @Patch(':commentId')
-  async update(
-    @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
-    @Param('commentId', ParseIntPipe, ValidateCommentExistValidator)
-    commentId: number,
-    @Body() updateCommentDto: UpdateCommentDtoRequest,
-  ) {
-    const comment = await this.prisma.comment.update({
-      where: {
-        id: commentId,
-        taskId: taskId,
-      },
-      data: {
-        content: updateCommentDto.content,
-      },
-    });
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'The comment was been successfully updated',
-      payload: comment,
-    };
-  }
-
-  @ApiResponse({
-    status: HttpStatus.OK,
-    schema: {
-      example: {
-        statusCode: 200,
         payload: [
           {
             id: 1,
@@ -195,10 +121,72 @@ export class CommentController {
   @Get()
   async get(
     @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
-  ) {
+  ): Promise<{ payload: Comment[] | [] }> {
     const comments = await this.prisma.comment.findMany({
       where: { taskId: taskId },
     });
-    return { statusCode: HttpStatus.OK, payload: comments };
+    return { payload: comments };
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        payload: {
+          id: 12,
+          content: 'aaaaaaaac',
+          taskId: 2,
+          userId: 1,
+          answerId: 1,
+          type: true,
+        },
+      },
+    },
+  })
+  @Patch(':commentId')
+  async update(
+    @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
+    @Param('commentId', ParseIntPipe, ValidateCommentExistValidator)
+    commentId: number,
+    @Body() updateCommentDto: UpdateCommentDtoRequest,
+  ): Promise<{ payload: Comment }> {
+    const comment = await this.prisma.comment.update({
+      where: {
+        id: commentId,
+        taskId: taskId,
+      },
+      data: {
+        content: updateCommentDto.content,
+      },
+    });
+    return {
+      payload: comment,
+    };
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: {
+        payload: null,
+      },
+    },
+  })
+  @Delete(':commentId')
+  async delete(
+    @Param('taskId', ParseIntPipe, ValidateTaskExistsValidator) taskId: number,
+    @Param('commentId', ParseIntPipe, ValidateCommentExistValidator)
+    commentId: number,
+  ): Promise<{ payload: null }> {
+    await this.prisma.comment.delete({
+      where: {
+        id: commentId,
+        taskId: taskId,
+      },
+    });
+
+    return {
+      payload: null,
+    };
   }
 }
