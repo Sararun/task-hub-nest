@@ -139,7 +139,6 @@ export class BoardController {
       },
     },
   })
-  //TODO::сделать каскадное удаление для некоторых таблиц
   @Delete(':boardId')
   async delete(
     @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
