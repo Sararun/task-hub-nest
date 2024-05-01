@@ -3,22 +3,29 @@ import {
   Controller,
   Get,
   HttpStatus,
-  InternalServerErrorException,
   Patch,
   Req,
+  UnauthorizedException,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { SetProfileDataDtoRequest } from '../requests/setProfileData.dto.request';
 import { AuthGuard } from '@nestjs/passport';
 import { PrismaService } from '../../services/prisma.service';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from '@prisma/client';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MinioService } from '../../services/minio.service';
 
 @Controller('profile')
 @ApiTags('profile')
 @UseGuards(AuthGuard('jwt'))
 export class ProfileController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly minioService: MinioService,
+  ) {}
 
   @Get()
   @ApiResponse({
@@ -28,6 +35,7 @@ export class ProfileController {
         payload: {
           email: 'email@mail.com',
           name: 'John Doe',
+          photo: 'http://photo-link',
         },
       },
     },
@@ -43,6 +51,7 @@ export class ProfileController {
       payload: {
         email: user?.email,
         name: user?.name,
+        photo: user?.photo,
       },
     };
   }
@@ -51,7 +60,11 @@ export class ProfileController {
     status: HttpStatus.OK,
     schema: {
       example: {
-        statusCode: HttpStatus.OK,
+        payload: {
+          email: 'email@mail.com',
+          name: 'name',
+          photo: 'http://photo-link',
+        },
       },
     },
     description: 'User successfully updated.',
@@ -68,27 +81,48 @@ export class ProfileController {
     description: 'Validation error',
   })
   @Patch('')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
   async update(
     @Body() setProfileDto: SetProfileDataDtoRequest,
     @Req() request: any,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    try {
-      const updatedUser: User = await this.prisma.user.update({
-        where: {
-          email: request.user.email,
-        },
-        data: {
-          name: setProfileDto.name,
-        },
-      });
-      if (updatedUser) {
-        return {
-          payload: { name: setProfileDto.name },
-        };
-      }
-      return { statusCode: HttpStatus.NOT_FOUND };
-    } catch (error) {
-      throw new InternalServerErrorException();
+    const user: User | null = await this.prisma.user.findUnique({
+      where: {
+        email: request.user.email,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException();
     }
+    let fileUrl: string | undefined = undefined;
+    if (file) {
+      console.log(1);
+      if (user.photo) {
+        const fileName = this.minioService.parseNameFromUrl(user.photo);
+        await this.minioService.deleteFile(fileName);
+      }
+
+      const newFileName = await this.minioService.uploadFile(file);
+      fileUrl = await this.minioService.getFileUrl(newFileName);
+    }
+    const updatedUser = await this.prisma.user.update({
+      data: {
+        name: setProfileDto?.name,
+        photo: fileUrl,
+      },
+      where: {
+        id: user.id,
+      },
+    });
+    return {
+      payload: {
+        email: updatedUser.email,
+        name: updatedUser.name,
+        photo: fileUrl,
+      },
+    };
   }
 }

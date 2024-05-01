@@ -1,0 +1,1594 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/signin": {
+      "post": {
+        "operationId": "AuthController_signIn",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SigInDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access token was generated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": true
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": [
+                      "email must be an email",
+                      "password must be a string",
+                      "password should not be empty"
+                    ],
+                    "error": "Bad Request",
+                    "statusCode": 400
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Unauthorized",
+                    "statusCode": 401
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "operationId": "AuthController_signUp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SigUpDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Register ok and access token was generated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": true
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": [
+                      "email must be an email",
+                      "password must be a string",
+                      "password should not be empty"
+                    ],
+                    "error": "Bad Request",
+                    "statusCode": 400
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Unauthorized",
+                    "statusCode": 401
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/profile": {
+      "get": {
+        "operationId": "ProfileController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": {
+                      "email": "email@mail.com",
+                      "name": "John Doe",
+                      "photo": "http://photo-link"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "profile"
+        ]
+      },
+      "patch": {
+        "operationId": "ProfileController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SetProfileDataDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User successfully updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": {
+                      "email": "email@mail.com",
+                      "name": "name",
+                      "photo": "http://photo-link"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": [
+                      "name must be shorter than or equal to 255 characters"
+                    ],
+                    "error": "Bad Request",
+                    "statusCode": 400
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "profile"
+        ]
+      }
+    },
+    "/boards": {
+      "post": {
+        "operationId": "BoardController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddBoardDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": {
+                      "id": 7,
+                      "name": "third"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": [
+                      "name must be shorter than or equal to 255 characters",
+                      "name must be a string"
+                    ],
+                    "error": "Bad Request",
+                    "statusCode": 400
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "boards"
+        ]
+      },
+      "get": {
+        "operationId": "BoardController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": [
+                      {
+                        "id": 1,
+                        "name": "first"
+                      },
+                      {
+                        "id": 2,
+                        "name": "second"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "boards"
+        ]
+      }
+    },
+    "/boards/{boardId}": {
+      "patch": {
+        "operationId": "BoardController_update",
+        "parameters": [
+          {
+            "name": "boardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddBoardDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": {
+                      "id": 1,
+                      "name": "first"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Board not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "boards"
+        ]
+      },
+      "delete": {
+        "operationId": "BoardController_delete",
+        "parameters": [
+          {
+            "name": "boardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": null
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Board not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "boards"
+        ]
+      }
+    },
+    "/boards/{boardId}/columns": {
+      "post": {
+        "operationId": "ColumnController_create",
+        "parameters": [
+          {
+            "name": "boardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddColumnDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": {
+                      "id": 9,
+                      "name": "third",
+                      "column_number": 6,
+                      "board_id": 2
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": [
+                      "name should not be empty"
+                    ],
+                    "error": "Bad Request",
+                    "statusCode": 400
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Board not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "columns"
+        ]
+      },
+      "get": {
+        "operationId": "ColumnController_get",
+        "parameters": [
+          {
+            "name": "boardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": [
+                      {
+                        "id": 1,
+                        "name": "first",
+                        "column_number": 0,
+                        "board_id": 1
+                      },
+                      {
+                        "id": 2,
+                        "name": "second",
+                        "column_number": 1,
+                        "board_id": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Board not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "columns"
+        ]
+      }
+    },
+    "/boards/{boardId}/columns/{columnId}": {
+      "patch": {
+        "operationId": "ColumnController_update",
+        "parameters": [
+          {
+            "name": "boardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "columnId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateColumnDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The column was been updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": {
+                      "id": 5,
+                      "name": "five",
+                      "column_number": 0,
+                      "board_id": 2
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": [
+                      "name must be a string"
+                    ],
+                    "error": "Bad Request",
+                    "statusCode": 400
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Column not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "columns"
+        ]
+      },
+      "delete": {
+        "operationId": "ColumnController_delete",
+        "parameters": [
+          {
+            "name": "boardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "columnId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": null
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Column not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "columns"
+        ]
+      }
+    },
+    "/columns/{columnId}/tasks": {
+      "post": {
+        "operationId": "TaskController_create",
+        "parameters": [
+          {
+            "name": "columnId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTaskDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": {
+                      "id": 11,
+                      "images": null,
+                      "name": "name",
+                      "description": null,
+                      "deadline": "2024-03-05T14:49:39.907Z",
+                      "owner_id": 1,
+                      "column_id": 5,
+                      "statusId": 1,
+                      "timestamps": "2024-03-04T14:49:39.907Z",
+                      "recepient_id": 1,
+                      "photos": "http://photo-link"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": [
+                      "name should not be empty",
+                      "name must be shorter than or equal to 255 characters",
+                      "name must be a string"
+                    ],
+                    "error": "Bad request",
+                    "statusCode": 400
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Unauthorized",
+                    "statusCode": 401
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Column not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "tasks"
+        ]
+      },
+      "get": {
+        "operationId": "TaskController_get",
+        "parameters": [
+          {
+            "name": "columnId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": [
+                      {
+                        "id": 1,
+                        "images": null,
+                        "name": "task_name",
+                        "description": null,
+                        "deadline": "2024-02-28T20:21:21.168Z",
+                        "owner_id": 1,
+                        "column_id": 4,
+                        "statusId": 1,
+                        "timestamps": "2024-02-26T14:41:42.307Z",
+                        "photos": "http://photo-link"
+                      },
+                      {
+                        "id": 2,
+                        "images": null,
+                        "name": "task_name",
+                        "description": null,
+                        "deadline": "2024-02-28T20:21:21.168Z",
+                        "owner_id": 1,
+                        "column_id": 4,
+                        "statusId": 1,
+                        "timestamps": "2024-02-26T14:41:47.734Z",
+                        "photos": "http://photo-link"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Unauthorized",
+                    "statusCode": 401
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Column not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/columns/{columnId}/tasks/{taskId}": {
+      "patch": {
+        "operationId": "TaskController_update",
+        "parameters": [
+          {
+            "name": "columnId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTaskDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": [
+                      {
+                        "id": 1,
+                        "images": null,
+                        "name": "task_name",
+                        "description": null,
+                        "deadline": "2024-02-28T20:21:21.168Z",
+                        "owner_id": 1,
+                        "column_id": 4,
+                        "statusId": 1,
+                        "timestamps": "2024-02-26T14:41:42.307Z",
+                        "photos": "http://photo-link"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Unauthorized",
+                    "statusCode": 401
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Column not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "tasks"
+        ]
+      },
+      "delete": {
+        "operationId": "TaskController_delete",
+        "parameters": [
+          {
+            "name": "columnId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task was been deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": null
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not authorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Unauthorized",
+                    "statusCode": 401
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Column not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/statuses/{statusId}": {
+      "patch": {
+        "operationId": "StatusController_update",
+        "parameters": [
+          {
+            "name": "statusId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStatusDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": [
+                      {
+                        "id": 99,
+                        "name": "name",
+                        "color_code": "FFFFFFFFF"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": [
+                      "colorCode must be in uppercase."
+                    ],
+                    "error": "Bad Request",
+                    "statusCode": 400
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Status not found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "statuses"
+        ]
+      }
+    },
+    "/tasks/{taskId}/comments": {
+      "post": {
+        "operationId": "CommentController_create",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": {
+                      "id": 12,
+                      "content": "aaaaaaaac",
+                      "taskId": 2,
+                      "userId": 1,
+                      "answerId": 1,
+                      "type": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": [
+                      "content must be a string"
+                    ],
+                    "error": "Bad request",
+                    "statusCode": 400
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "The task what you wanted doesn't exist",
+                    "error": "Not Found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "comments"
+        ]
+      },
+      "get": {
+        "operationId": "CommentController_get",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": [
+                      {
+                        "id": 1,
+                        "content": "0000000000000000",
+                        "taskId": 2,
+                        "userId": 1,
+                        "answerId": null,
+                        "type": null
+                      },
+                      {
+                        "id": 2,
+                        "content": "111111111111",
+                        "taskId": 2,
+                        "userId": 1,
+                        "answerId": null,
+                        "type": null
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "The task what you wanted doesn't exist",
+                    "error": "Not Found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/tasks/{taskId}/comments/{commentId}": {
+      "patch": {
+        "operationId": "CommentController_update",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCommentDtoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": {
+                      "id": 12,
+                      "content": "aaaaaaaac",
+                      "taskId": 2,
+                      "userId": 1,
+                      "answerId": 1,
+                      "type": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "The task what you wanted doesn't exist",
+                    "error": "Not Found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "comments"
+        ]
+      },
+      "delete": {
+        "operationId": "CommentController_delete",
+        "parameters": [
+          {
+            "name": "taskId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "commentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "payload": null
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "The task what you wanted doesn't exist",
+                    "error": "Not Found",
+                    "statusCode": 404
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "comments"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "task-hub-api",
+    "description": "",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "SigInDtoRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "The email of the user.",
+            "example": "email@mail.com",
+            "maxLength": 255,
+            "uniqueItems": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The password of the user.",
+            "example": "password",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "SigUpDtoRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "The email of the user.",
+            "example": "email@mail.com",
+            "maxLength": 255,
+            "uniqueItems": true
+          },
+          "password": {
+            "type": "string",
+            "description": "The password of the user.",
+            "example": "password",
+            "maxLength": 255
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the user.",
+            "example": "John Doe",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "name"
+        ]
+      },
+      "SetProfileDataDtoRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the user.",
+            "example": "John Doe",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "AddBoardDtoRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The board name.",
+            "example": "Board name",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "AddColumnDtoRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The column name.",
+            "example": "Column name",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateColumnDtoRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of column.",
+            "example": "Column name",
+            "maxLength": 255
+          },
+          "columnNumber": {
+            "type": "number",
+            "description": "The number of column.",
+            "example": 0
+          }
+        }
+      },
+      "CreateTaskDtoRequest": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "The description of the task.",
+            "example": "Some kind of description"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the task.",
+            "example": "Name of task"
+          },
+          "deadline": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Deadline date",
+            "example": "2024-02-24T20:21:21.168Z"
+          },
+          "statusId": {
+            "type": "object",
+            "description": "Status id",
+            "example": "1"
+          },
+          "recepientId": {
+            "type": "object",
+            "description": "Id of user which assigned to task",
+            "example": "1"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateTaskDtoRequest": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "The description of the task.",
+            "example": "Some kind of description"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the task.",
+            "example": "Name of task"
+          },
+          "deadline": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Deadline date",
+            "example": "2024-02-24T20:21:21.168Z"
+          },
+          "statusId": {
+            "type": "object",
+            "description": "Status id",
+            "example": "1"
+          },
+          "deletedImagesId": {
+            "type": "object",
+            "description": "deleted photos id",
+            "example": [
+              0,
+              4
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "UpdateStatusDtoRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The status name.",
+            "example": "Star",
+            "maxLength": 255
+          },
+          "colorCode": {
+            "type": "string",
+            "description": "The color code.",
+            "example": "FFFFFF",
+            "maxLength": 9
+          }
+        },
+        "required": [
+          "name",
+          "colorCode"
+        ]
+      },
+      "CreateCommentDtoRequest": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The content of comment",
+            "example": "The text of comment"
+          },
+          "answerId": {
+            "type": "number",
+            "description": "The id of parent comment",
+            "example": 1
+          },
+          "type": {
+            "type": "boolean",
+            "description": "Type of comment location in the hierarchy",
+            "example": true
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
+      "UpdateCommentDtoRequest": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "A some content",
+            "example": "somebody want`s talking"
+          }
+        },
+        "required": [
+          "content"
+        ]
+      }
+    }
+  }
+}
