@@ -218,6 +218,49 @@
         ]
       }
     },
+    "/profile/search": {
+      "get": {
+        "operationId": "ProfileController_search",
+        "parameters": [
+          {
+            "name": "name",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": [
+                    {
+                      "id": 1,
+                      "name": "pppppppppppppppppppppppppppppp",
+                      "email": "email@gmail.com",
+                      "photo": "http://localhost:9000/mybucketname/"
+                    },
+                    {
+                      "id": 2,
+                      "name": "vlad_sarosek",
+                      "email": "emcail@gmail.com",
+                      "photo": null
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "profile"
+        ]
+      }
+    },
     "/boards": {
       "post": {
         "operationId": "BoardController_create",
@@ -282,12 +325,38 @@
                   "example": {
                     "payload": [
                       {
-                        "id": 1,
-                        "name": "first"
+                        "boardId": 1,
+                        "members": [
+                          {
+                            "email": "emailemail@mail.com",
+                            "photo": "http://localhost:9000/mybucketname",
+                            "name": "Vladislav sarosek",
+                            "role": "member"
+                          },
+                          {
+                            "email": "emcail@gmail.com",
+                            "photo": null,
+                            "name": "vlad_sarosek",
+                            "role": "member"
+                          },
+                          {
+                            "email": "email@gmail.com",
+                            "photo": "http://localhost:9000/mybucketname",
+                            "name": "pppppppppppppppppppppppppppppp",
+                            "role": "admin"
+                          }
+                        ]
                       },
                       {
-                        "id": 2,
-                        "name": "second"
+                        "boardId": 3,
+                        "members": [
+                          {
+                            "email": "email@gmail.com",
+                            "photo": "http://localhost:9000/mybucketname/",
+                            "name": "pppppppppppppppppppppppppppppp",
+                            "role": "admin"
+                          }
+                        ]
                       }
                     ]
                   }
@@ -319,7 +388,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddBoardDtoRequest"
+                "$ref": "#/components/schemas/UpdateBoardDtoRequest"
               }
             }
           }
@@ -1430,6 +1499,39 @@
         "required": [
           "name"
         ]
+      },
+      "UpdateBoardDtoRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The board name.",
+            "example": "Board name",
+            "maxLength": 255
+          },
+          "deletedUsersList": {
+            "description": "deleted users from board ids array",
+            "example": [
+              0,
+              4
+            ],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "addedUserList": {
+            "description": "added users to board ids array",
+            "example": [
+              0,
+              4
+            ],
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
       },
       "AddColumnDtoRequest": {
         "type": "object",
