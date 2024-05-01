@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpStatus,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Patch,
@@ -114,6 +115,25 @@ export class TaskController {
     }
     const addDay = new Date();
     addDay.setDate(addDay.getDate() + 1);
+    let recepientId: number | undefined = undefined;
+    if (addTaskDto.recepientId) {
+      const column = await this.prisma.column.findUnique({
+        where: { id: columnId },
+      });
+
+      if (!column) {
+        throw new NotFoundException('column not found');
+      }
+      const boardAccess = await this.prisma.boardUserRole.findFirst({
+        where: {
+          userId: user.id,
+          boardId: column.board_id,
+        },
+      });
+      if (boardAccess) {
+        recepientId = addTaskDto.recepientId;
+      }
+    }
     const task = await this.prisma.task.create({
       data: {
         name: addTaskDto.name,
@@ -122,7 +142,7 @@ export class TaskController {
         owner_id: user.id,
         column_id: columnId,
         statusId: addTaskDto.statusId ?? 1,
-        recepient_id: addTaskDto.recepientId ?? null,
+        recepient_id: recepientId,
         photos: fileUrls,
         timestamps: new Date(),
       },

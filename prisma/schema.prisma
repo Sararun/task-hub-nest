@@ -2,8 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
+  previewFeatures = ["fullTextSearch"]
 }
 
 datasource db {
@@ -12,15 +13,16 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  name          String    @db.VarChar(255)
-  email         String    @unique @db.VarChar(255)
-  password      String    @db.VarChar(30)
-  timestamps    DateTime  @db.Timestamp()
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(255)
+  email         String          @unique @db.VarChar(255)
+  password      String          @db.VarChar(30)
+  timestamps    DateTime        @db.Timestamp()
   comments      Comment[]
-  photo         String?   @db.Text
-  tasksOwned    Task[]    @relation("tasksOwned")
-  tasksAssigned Task[]    @relation("tasksAssigned")
+  photo         String?         @db.Text
+  tasksOwned    Task[]          @relation("tasksOwned")
+  tasksAssigned Task[]          @relation("tasksAssigned")
+  BoardUserRole BoardUserRole[]
 }
 
 model Task {
@@ -54,9 +56,10 @@ model Column {
 }
 
 model Board {
-  id      Int      @id @default(autoincrement())
-  name    String   @db.VarChar(255)
-  columns Column[]
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(255)
+  columns       Column[]
+  BoardUserRole BoardUserRole[]
 }
 
 model Status {
@@ -77,4 +80,22 @@ model Comment {
   answer   Comment?  @relation("ParentChild", fields: [answerId], references: [id])
   type     Boolean?
   children Comment[] @relation("ParentChild")
+}
+
+model Role {
+  id            Int             @id @default(autoincrement())
+  name          String          @unique
+  BoardUserRole BoardUserRole[]
+}
+
+model BoardUserRole {
+  id      Int   @id @default(autoincrement())
+  board   Board @relation(fields: [boardId], references: [id])
+  boardId Int
+  user    User  @relation(fields: [userId], references: [id])
+  userId  Int
+  role    Role  @relation(fields: [roleId], references: [id])
+  roleId  Int
+
+  @@unique([boardId, userId, roleId])
 }

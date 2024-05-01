@@ -4,6 +4,7 @@ import {
   Get,
   HttpStatus,
   Patch,
+  Query,
   Req,
   UnauthorizedException,
   UploadedFile,
@@ -99,7 +100,6 @@ export class ProfileController {
     }
     let fileUrl: string | undefined = undefined;
     if (file) {
-      console.log(1);
       if (user.photo) {
         const fileName = this.minioService.parseNameFromUrl(user.photo);
         await this.minioService.deleteFile(fileName);
@@ -124,5 +124,44 @@ export class ProfileController {
         photo: fileUrl,
       },
     };
+  }
+
+  @Get('/search')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    schema: {
+      example: [
+        {
+          id: 1,
+          name: 'pppppppppppppppppppppppppppppp',
+          email: 'email@gmail.com',
+          photo: 'http://localhost:9000/mybucketname/',
+        },
+        {
+          id: 2,
+          name: 'vlad_sarosek',
+          email: 'emcail@gmail.com',
+          photo: null,
+        },
+      ],
+    },
+    description: 'Validation error',
+  })
+  async search(@Query('name') name: string) {
+    const users = await this.prisma.user.findMany({
+      where: {
+        name: {
+          search: name,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        photo: true,
+      },
+    });
+
+    return { payload: users };
   }
 }
