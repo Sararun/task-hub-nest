@@ -1,5 +1,7 @@
 import {
+  IsArray,
   IsDate,
+  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -8,7 +10,7 @@ import {
   Validate,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsDateBeforeNowValidator } from '../../../validators/isDateBeforeNow.validator';
 
 export class UpdateTaskDtoRequest {
@@ -54,5 +56,16 @@ export class UpdateTaskDtoRequest {
     example: '1',
     required: false,
   })
-  statusId: number | undefined;
+  readonly statusId: number | undefined;
+
+  @IsOptional()
+  @IsArray()
+  @ApiProperty({
+    description: 'deleted photos id',
+    example: [0, 4],
+    required: false,
+  })
+  @Transform(({ value }) => (Array.isArray(value) ? value.map(Number) : []))
+  @IsInt({ each: true })
+  readonly deletedImagesId: number[] | undefined;
 }

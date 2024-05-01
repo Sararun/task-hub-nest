@@ -2,12 +2,14 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma.service';
 import { Response } from 'express';
+import { MinioService } from '../minio.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private jwtService: JwtService,
-    private prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+    private readonly minioService: MinioService,
   ) {}
 
   async signIn(email: string, pass: string): Promise<{ access_token: string }> {
@@ -29,13 +31,22 @@ export class AuthService {
     name: string,
     email: string,
     password: string,
+    file: Express.Multer.File | undefined,
   ): Promise<boolean> {
+    let fileUrl: string | undefined = undefined;
+
+    if (file) {
+      const newFileName = await this.minioService.uploadFile(file);
+      fileUrl = await this.minioService.getFileUrl(newFileName);
+    }
+
     try {
       await this.prisma.user.create({
         data: {
           name: name,
           email: email,
           password: password,
+          photo: fileUrl,
           timestamps: new Date(),
         },
       });

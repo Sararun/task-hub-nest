@@ -6,12 +6,15 @@ import {
   Post,
   Res,
   UnauthorizedException,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from '../../services/auth/auth.service';
 import { SigInDtoRequest } from '../requests/sigIn.dto.request';
 import { SigUpDtoRequest } from '../requests/signUp.dto.request';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -41,7 +44,7 @@ import { Response } from 'express';
   description: 'User not authorized',
 })
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('signin')
   @HttpCode(HttpStatus.OK)
@@ -78,14 +81,18 @@ export class AuthController {
       },
     },
   })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
   async signUp(
     @Body() signUpDto: SigUpDtoRequest,
     @Res({ passthrough: true }) res: Response,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<{ status: true }> {
     const signUpResult: boolean = await this.authService.signUp(
       signUpDto.name,
       signUpDto.email,
       signUpDto.password,
+      file,
     );
     if (signUpResult) {
       const { access_token } = await this.authService.signIn(

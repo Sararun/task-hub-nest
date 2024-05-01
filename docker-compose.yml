@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   app:
     container_name: app-node
@@ -11,10 +12,12 @@ services:
       - NODE_ENV=production
     depends_on:
       - db
+      - minio
     volumes:
       - .:/var/www/app
     env_file:
       - .env
+
   db:
     container_name: postgres_db
     image: postgres:alpine
@@ -27,5 +30,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  minio:
+    container_name: minio
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env
+    command: server /data
+    volumes:
+      - minio_data:/data
+
 volumes:
   postgres_data:
+  minio_data:
+    driver: local

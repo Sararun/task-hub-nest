@@ -18,6 +18,7 @@ model User {
   password      String    @db.VarChar(30)
   timestamps    DateTime  @db.Timestamp()
   comments      Comment[]
+  photo         String?   @db.Text
   tasksOwned    Task[]    @relation("tasksOwned")
   tasksAssigned Task[]    @relation("tasksAssigned")
 }
@@ -37,6 +38,7 @@ model Task {
   status       Status    @relation(fields: [statusId], references: [id])
   statusId     Int
   timestamps   DateTime  @db.Timestamp()
+  photos       Json?     @db.JsonB
   Comment      Comment[]
 }
 

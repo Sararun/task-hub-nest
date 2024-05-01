@@ -4,9 +4,9 @@ import { AuthService } from '../services/auth/auth.service';
 import { AuthController } from '../http/controllers/auth.controller';
 import { jwtConstants } from '../services/auth/constants';
 import { PrismaService } from '../services/prisma.service';
-import { ProfileModule } from './profile.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from '../jwt.strategy';
+import { MinioService } from '../services/minio.service';
 
 @Module({
   imports: [
@@ -16,10 +16,9 @@ import { JwtStrategy } from '../jwt.strategy';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '30m' },
     }),
-    ProfileModule,
     JwtModule,
   ],
-  providers: [AuthService, PrismaService, JwtStrategy],
+  providers: [AuthService, PrismaService, JwtStrategy, MinioService],
   controllers: [AuthController],
   exports: [AuthService],
 })
