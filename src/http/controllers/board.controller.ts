@@ -17,9 +17,8 @@ import { PrismaService } from '../../services/prisma.service';
 import { AddBoardDtoRequest } from '../requests/boards/addBoard.dto.request';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { Board, User } from '@prisma/client';
+import { Board, RoleEnum, User } from '@prisma/client';
 import { ValidateBoardExistsValidator } from '../../validators/validateBoardExists.validator';
-import { RoleEnum } from '../../enums/role.enum';
 import { DoesNotFindPermissionException } from '../../exceptions/http/roles/doesNotFindPermission.exception';
 import { UpdateBoardDtoRequest } from '../requests/boards/updateBoard.dto.request';
 
@@ -182,7 +181,8 @@ export class BoardController {
       },
     });
     const result = boards.map((board) => ({
-      boardId: board.id,
+      id: board.id,
+      name: board.name,
       members: board.BoardUserRole.map((bur) => ({
         email: bur.user.email,
         photo: bur.user.photo,
@@ -317,10 +317,105 @@ export class BoardController {
     @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
     boardId: number,
   ): Promise<{ payload: null }> {
+    await this.prisma.boardUserRole.deleteMany({
+      where: {
+        boardId: boardId,
+      },
+    })
     await this.prisma.board.delete({ where: { id: boardId } });
 
     return {
       payload: null,
+    };
+  }
+
+  @Get(':boardId/members')
+  async getMembers(
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+  ) {
+    const burs = await this.prisma.boardUserRole.findMany({
+      where: {
+        boardId: Number(boardId),
+      },
+      select: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            photo: true,
+          },
+        },
+        role: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+    return {
+      payload: burs.map((b) => ({ ...b.user, role: b.role })),
+    };
+  }
+
+  @Post(':boardId/members')
+  async addMembers(
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+    @Body() body: { userId: number },
+  ) {
+
+    const role = await this.prisma.role.findUnique({
+      where: {
+        name: RoleEnum.Member
+      }
+    })
+
+    if (!role) {
+      throw new NotFoundException('role not found');
+    }
+
+    const burs = await this.prisma.boardUserRole.create({
+      data: {
+        boardId: boardId,
+        userId: body.userId,
+        roleId: role.id,
+      }
+    });
+    return {
+      payload: burs,
+    };
+  }
+
+  @Delete(':boardId/members/:userId')
+  async deleteMember(
+    @Param('boardId', ParseIntPipe, ValidateBoardExistsValidator)
+    boardId: number,
+    @Param('userId', ParseIntPipe)
+    userId: number,
+  ) {
+    const memberRole = await this.prisma.role.findUnique({
+      where: {
+        name: RoleEnum.Member
+      }
+    })
+
+    if (!memberRole) {
+      throw new NotFoundException('role not found');
+    }
+    const burs = await this.prisma.boardUserRole.delete({
+      where: {
+        boardId_userId_roleId: {
+          boardId: boardId,
+          userId: userId,
+          roleId: memberRole.id,
+        },
+      },
+    });
+    return {
+      payload: burs,
     };
   }
 }

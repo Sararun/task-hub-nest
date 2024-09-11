@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../services/prisma.service';
 import { UpdateStatusDtoRequest } from '../requests/updateStatus.dto.request';
-import { Status } from '@prisma/client';
+import { Status, StatusEnum } from '@prisma/client';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { StatusNotFoundException } from '../../exceptions/http/statusses/status.not_found.exception';
 
@@ -69,7 +69,7 @@ export class StatusController {
         id: statusId,
       },
       data: {
-        name: req?.name,
+        name: req?.name as StatusEnum,
         color_code: req?.colorCode,
       },
     });

@@ -20,8 +20,10 @@ async function bootstrap() {
   app.use(cookieParser());
   app.enableCors({ credentials: true, origin: 'http://localhost:3001' });
   app.setGlobalPrefix('api');
-  
+
   await app.listen(3000);
+
+  console.log('Приложение запущено 3000');
 }
 
 bootstrap();

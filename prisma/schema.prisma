@@ -63,9 +63,9 @@ model Board {
 }
 
 model Status {
-  id         Int    @id @default(autoincrement())
-  name       String @db.VarChar(255)
-  color_code String @db.VarChar(9)
+  id         Int        @id @default(autoincrement())
+  name       StatusEnum
+  color_code String     @db.VarChar(9)
   Task       Task[]
 }
 
@@ -84,7 +84,7 @@ model Comment {
 
 model Role {
   id            Int             @id @default(autoincrement())
-  name          String          @unique
+  name          RoleEnum        @unique
   BoardUserRole BoardUserRole[]
 }
 
@@ -98,4 +98,18 @@ model BoardUserRole {
   roleId  Int
 
   @@unique([boardId, userId, roleId])
+}
+
+enum StatusEnum {
+  NotStatus
+  TODO
+  InProgress
+  Review
+  Done
+  Blocked
+}
+
+enum RoleEnum {
+  Admin
+  Member
 }

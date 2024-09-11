@@ -1,15 +1,15 @@
 FROM node:20-alpine AS dev
 
-WORKDIR /var/www
+WORKDIR /app
 
 COPY --link package*.json .env ./
 RUN npm ci --no-audit
 
 FROM node:20-alpine as build
 
-WORKDIR /var/www
+WORKDIR /app
 
-COPY --link --from=dev /var/www/node_modules ./node_modules
+COPY --link --from=dev /app/node_modules ./node_modules
 
 COPY --link . .
 
@@ -18,11 +18,14 @@ RUN npm run build
 
 FROM node:20-alpine as prod
 
-WORKDIR /var/www
+WORKDIR /app
 
-COPY --link --from=build /var/www/dist dist
-COPY --link --from=build /var/www/node_modules node_modules
-COPY --link --from=build /var/www/package.json package.json
-COPY --link --from=build /var/www/prisma prisma
+COPY --link --from=build /app/dist dist
+COPY --link --from=build /app/node_modules node_modules
+COPY --link --from=build /app/package.json package.json
+COPY --link --from=build /app/prisma prisma
+COPY --link . .
 
-CMD ["npm", "run", "start:migrate:prod"]
+EXPOSE 3000
+
+CMD ["npm", "run", "start:migrate:dev"]

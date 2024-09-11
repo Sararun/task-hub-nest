@@ -14,6 +14,7 @@ import { StatusController } from './http/controllers/status.controller';
 import { CommentController } from './http/controllers/comment.controller';
 import { ConfigModule } from '@nestjs/config';
 import { MinioService } from './services/minio.service';
+import { UserController } from './http/controllers/user.controller';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { MinioService } from './services/minio.service';
     TaskController,
     StatusController,
     CommentController,
+    UserController,
   ],
   providers: [
     AppService,

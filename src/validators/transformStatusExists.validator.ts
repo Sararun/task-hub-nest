@@ -1,6 +1,5 @@
 import { Injectable, PipeTransform } from '@nestjs/common';
-import { Status } from '@prisma/client';
-import { StatusEnum } from '../enums/status.enum';
+import { Status, StatusEnum } from '@prisma/client';
 import { PrismaService } from '../services/prisma.service';
 import { CreateTaskDtoRequest } from '../http/requests/tasks/createTask.dto.request';
 

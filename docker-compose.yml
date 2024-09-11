@@ -17,6 +17,8 @@ services:
       - .:/var/www/app
     env_file:
       - .env
+    stdin_open: true
+    tty: true
 
   db:
     container_name: postgres_db
@@ -34,10 +36,10 @@ services:
     container_name: minio
     image: minio/minio
     ports:
-      - "9000:9000"
+      - "9001:9001"
     env_file:
       - .env
-    command: server /data
+    command: ["server", "--console-address", ":9001", "/data"]
     volumes:
       - minio_data:/data
 
